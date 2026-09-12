@@ -1,0 +1,1132 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Prototype Bingo - 14 couloirs - V12</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --panel: #ffffff;
+    --ink: #111111;
+    --muted: #747b85;
+    --border: #20242a;
+    --slot-off: #d7d9dd;
+    --slot-on: #f2a33a;
+    --card-hit: #5bd66b;
+    --line-3: #ffe36a;
+    --line-4: #ffae57;
+    --line-5: #ff6b6b;
+    --button: #1f6feb;
+    --auto: #218838;
+    --reset: #d94a4a;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; }
+
+  body {
+    margin: 0;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  .app {
+    width: min(100%, 1500px);
+    height: 100dvh;
+    margin: 0 auto;
+    padding: clamp(6px, 1vh, 12px) clamp(8px, 1vw, 16px);
+    display: grid;
+    grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
+    gap: clamp(5px, .7vh, 9px);
+    overflow: hidden;
+  }
+
+  .topbar {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 8px;
+    align-items: center;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(18px, 2vw, 28px);
+    line-height: 1.05;
+  }
+
+  .subtitle {
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: clamp(10px, 1vw, 13px);
+  }
+
+  .counter {
+    min-width: 132px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    padding: clamp(5px, .7vh, 8px) 12px;
+    text-align: center;
+    font-size: clamp(16px, 1.7vw, 21px);
+    font-weight: 900;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 9px;
+    padding: clamp(5px, .7vh, 9px);
+  }
+
+  .panel-title {
+    margin: 0 0 4px 0;
+    font-size: clamp(13px, 1.3vw, 17px);
+  }
+
+  .corridors {
+    display: grid;
+    grid-template-columns: repeat(14, minmax(0, 1fr));
+    gap: clamp(2px, .35vw, 6px);
+  }
+
+  .corridor {
+    display: grid;
+    grid-template-rows: repeat(2, minmax(0, 1fr)) auto;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .corridor-slot {
+    height: clamp(30px, 4.4vh, 47px);
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    background: var(--slot-off);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .corridor-slot.active { background: var(--slot-on); }
+
+  .slot-number {
+    font-weight: 900;
+    font-size: clamp(14px, 1.5vw, 21px);
+  }
+
+  .slot-id {
+    margin-top: 1px;
+    font-size: clamp(7px, .7vw, 9px);
+    font-weight: 800;
+    color: #3d424a;
+  }
+
+  .corridor-name {
+    text-align: center;
+    font-weight: 900;
+    font-size: clamp(9px, .9vw, 13px);
+    line-height: 1;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: clamp(8px, .8vw, 10px);
+    line-height: 1;
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 4px; }
+  .swatch {
+    width: 12px;
+    height: 12px;
+    border: 1px solid #4d5259;
+    border-radius: 3px;
+    flex: 0 0 auto;
+  }
+  .swatch.off { background: var(--slot-off); }
+  .swatch.on { background: var(--slot-on); }
+  .swatch.hit { background: var(--card-hit); }
+  .swatch.line3 { background: var(--line-3); }
+  .swatch.line4 { background: var(--line-4); }
+  .swatch.line5 { background: var(--line-5); }
+
+  .status-row {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) auto;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .status {
+    display: flex;
+    align-items: center;
+    min-height: clamp(34px, 4.5vh, 46px);
+    padding: 5px 10px;
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: clamp(10px, 1vw, 14px);
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .buttons { display: flex; gap: 6px; }
+
+  button {
+    border: 0;
+    border-radius: 8px;
+    padding: 0 clamp(10px, 1.2vw, 18px);
+    min-height: clamp(34px, 4.5vh, 46px);
+    font: inherit;
+    font-weight: 900;
+    font-size: clamp(10px, 1vw, 14px);
+    cursor: pointer;
+    color: white;
+    white-space: nowrap;
+  }
+
+  #drawBtn { background: var(--button); }
+  #autoBtn { background: var(--auto); }
+  #batchBtn { background: #6f42c1; }
+  button:disabled { opacity: .38; cursor: default; }
+
+  .batch-input {
+    width: 105px;
+    min-height: clamp(34px, 4.5vh, 46px);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: white;
+    color: var(--ink);
+    padding: 0 8px;
+    font: inherit;
+    font-weight: 800;
+    font-size: clamp(10px, 1vw, 14px);
+    text-align: right;
+  }
+
+  .gear-button {
+    width: clamp(38px, 4.5vh, 46px);
+    min-width: clamp(38px, 4.5vh, 46px);
+    padding: 0;
+    background: #3e4650;
+    font-size: clamp(20px, 2.2vw, 27px);
+    line-height: 1;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(0, 0, 0, .42);
+  }
+
+  .modal-backdrop.open { display: flex; }
+
+  .accounting-modal {
+    width: min(700px, 96vw);
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, .3);
+    padding: 14px;
+  }
+
+  .modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .modal-head h2 {
+    margin: 0;
+    font-size: 22px;
+  }
+
+  .modal-close {
+    min-height: 34px;
+    width: 38px;
+    padding: 0;
+    background: #6c757d;
+    font-size: 19px;
+  }
+
+  .accounting-grid {
+    display: grid;
+    gap: 7px;
+  }
+
+  .accounting-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(110px, auto) minmax(120px, auto);
+    gap: 16px;
+    align-items: center;
+    border-bottom: 1px solid #d6d9dd;
+    padding: 8px 4px;
+  }
+
+  .accounting-row.header {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    padding-top: 2px;
+    padding-bottom: 6px;
+  }
+
+  .accounting-row.header > div:nth-child(2),
+  .accounting-row.header > div:nth-child(3) { text-align: right; }
+
+  .accounting-row.total {
+    border-top: 2px solid var(--border);
+    border-bottom: 0;
+    margin-top: 4px;
+    padding-top: 11px;
+    font-weight: 900;
+  }
+
+  .accounting-label { font-weight: 850; }
+  .accounting-detail { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .accounting-value { font-weight: 900; font-size: 18px; white-space: nowrap; text-align: right; }
+  .accounting-rate { font-weight: 900; font-size: 17px; white-space: nowrap; text-align: right; }
+  .accounting-note { margin-top: 10px; color: var(--muted); font-size: 12px; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(90px, 1fr));
+    gap: 6px;
+  }
+
+  .stat-box {
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: clamp(3px, .45vh, 6px) 8px;
+    text-align: center;
+  }
+
+  .stat-label {
+    font-size: clamp(8px, .8vw, 10px);
+    font-weight: 850;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    line-height: 1;
+  }
+
+  .stat-value {
+    margin-top: 1px;
+    font-size: clamp(15px, 1.5vw, 21px);
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .cards {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: clamp(5px, .7vh, 9px);
+  }
+
+  .card-panel {
+    min-height: 0;
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 9px;
+    padding: clamp(4px, .55vh, 7px);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  .card-title {
+    margin: 0 0 3px 0;
+    text-align: center;
+    font-size: clamp(11px, 1.1vw, 15px);
+    line-height: 1;
+  }
+
+  .bingo-grid {
+    min-height: 0;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-rows: repeat(5, minmax(0, 1fr));
+    border-left: 1.5px solid var(--border);
+    border-top: 1.5px solid var(--border);
+  }
+
+  .bingo-cell {
+    min-width: 0;
+    min-height: 0;
+    border-right: 1.5px solid var(--border);
+    border-bottom: 1.5px solid var(--border);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .bingo-cell.hit { background: var(--card-hit); }
+  .bingo-cell.line3 { background: var(--line-3); }
+  .bingo-cell.line4 { background: var(--line-4); }
+  .bingo-cell.line5 { background: var(--line-5); }
+
+  .bingo-number {
+    color: black;
+    font-size: clamp(13px, 2.1vh, 24px);
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .history {
+    padding: 4px 8px;
+    background: #eceef1;
+    border: 1px solid #c9cdd3;
+    border-radius: 6px;
+    min-height: 24px;
+    font-size: clamp(8px, .8vw, 11px);
+    color: #30343a;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+
+  .signature {
+    position: fixed;
+    right: 10px;
+    bottom: 5px;
+    z-index: 20;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    pointer-events: none;
+    user-select: none;
+  }
+  @media (max-height: 720px) {
+    .subtitle, .legend { display: none; }
+    .app { gap: 4px; padding-top: 5px; padding-bottom: 5px; }
+    .panel { padding: 4px 6px; }
+    .panel-title { margin-bottom: 2px; }
+    .corridor-slot { height: clamp(25px, 4.2vh, 32px); }
+    .history { min-height: 20px; padding-top: 2px; padding-bottom: 2px; }
+  }
+
+  @media (max-width: 900px) {
+    body { overflow: auto; }
+    .app { height: auto; min-height: 100dvh; overflow: visible; }
+    .topbar, .status-row { grid-template-columns: 1fr; }
+    .counter { justify-self: start; }
+    .gear-button { position: absolute; top: 8px; right: 8px; }
+    .buttons { display: grid; grid-template-columns: repeat(2, 1fr); }
+    .batch-input { width: 100%; }
+    .cards { grid-template-columns: 1fr; grid-template-rows: none; }
+    .card-panel { min-height: 220px; }
+    .corridors { min-width: 820px; }
+    .panel { overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div>
+      <h1>Prototype Bingo - 14 couloirs</h1>
+      <div class="subtitle">25 numéros de bingo / 28 passages · <span id="subtitleBalls">billes par partie</span> · 1er passage = numéro haut · 2e passage = numéro bas</div>
+    </div>
+    <div class="counter" id="counter">Billes : 0</div>
+    <button class="gear-button" id="settingsBtn" type="button" title="Comptabilité" aria-label="Ouvrir la comptabilité">⚙</button>
+  </div>
+
+  <section class="panel">
+    <h2 class="panel-title">Couloirs</h2>
+    <div class="corridors" id="corridors"></div>
+    <div class="legend">
+      <span class="legend-item"><span class="swatch off"></span> non sorti</span>
+      <span class="legend-item"><span class="swatch on"></span> sorti</span>
+      <span class="legend-item"><span class="swatch hit"></span> case cochée</span>
+      <span class="legend-item"><span class="swatch line3"></span> 3 en ligne</span>
+      <span class="legend-item"><span class="swatch line4"></span> 4 en ligne</span>
+      <span class="legend-item"><span class="swatch line5"></span> BINGO 5</span>
+    </div>
+  </section>
+
+  <div class="status-row">
+    <div class="status" id="status">Prêt. Lance la première bille.</div>
+    <div class="buttons">
+      <button id="drawBtn" type="button">LANCER UNE BILLE</button>
+      <button id="autoBtn" type="button">LANCER LES BILLES</button>
+      <input class="batch-input" id="batchCount" type="number" min="1" max="1000000" step="1" value="1000" aria-label="Nombre de parties automatiques" />
+      <button id="batchBtn" type="button">JOUER N PARTIES</button>
+    </div>
+  </div>
+
+  <section class="stats" aria-label="Statistiques cumulées">
+    <div class="stat-box"><div class="stat-label">Parties</div><div class="stat-value" id="statGames">0</div></div>
+    <div class="stat-box"><div class="stat-label">3 en ligne</div><div class="stat-value" id="stat3">0</div></div>
+    <div class="stat-box"><div class="stat-label">4 en ligne</div><div class="stat-value" id="stat4">0</div></div>
+    <div class="stat-box"><div class="stat-label">5 en ligne</div><div class="stat-value" id="stat5">0</div></div>
+  </section>
+
+  <section class="cards" id="cards"></section>
+  <div class="history" id="history"><strong>Historique :</strong> —</div>
+</div>
+<div class="signature">By JT for PMGAMES</div>
+
+<div class="modal-backdrop" id="accountingBackdrop" role="dialog" aria-modal="true" aria-labelledby="accountingTitle">
+  <div class="accounting-modal">
+    <div class="modal-head">
+      <h2 id="accountingTitle">Comptabilité</h2>
+      <button class="modal-close" id="accountingCloseBtn" type="button" aria-label="Fermer">×</button>
+    </div>
+    <div class="accounting-grid">
+      <div class="accounting-row header">
+        <div>Poste</div><div>Montant</div><div>Parties gagnantes</div>
+      </div>
+      <div class="accounting-row">
+        <div><div class="accounting-label">IN</div><div class="accounting-detail" id="accInDetail"></div></div>
+        <div class="accounting-value" id="accIn">0,00 €</div>
+        <div class="accounting-rate">—</div>
+      </div>
+      <div class="accounting-row">
+        <div><div class="accounting-label">OUT_3L</div><div class="accounting-detail" id="acc3Detail"></div></div>
+        <div class="accounting-value" id="acc3">0,00 €</div>
+        <div class="accounting-rate" id="acc3Rate">0,00 %</div>
+      </div>
+      <div class="accounting-row">
+        <div><div class="accounting-label">OUT_4L</div><div class="accounting-detail" id="acc4Detail"></div></div>
+        <div class="accounting-value" id="acc4">0,00 €</div>
+        <div class="accounting-rate" id="acc4Rate">0,00 %</div>
+      </div>
+      <div class="accounting-row">
+        <div><div class="accounting-label">OUT_5L</div><div class="accounting-detail" id="acc5Detail"></div></div>
+        <div class="accounting-value" id="acc5">0,00 €</div>
+        <div class="accounting-rate" id="acc5Rate">0,00 %</div>
+      </div>
+      <div class="accounting-row total">
+        <div><div class="accounting-label">TOTAL OUT</div><div class="accounting-detail" id="accRtp"></div></div>
+        <div class="accounting-value" id="accOut">0,00 €</div>
+        <div class="accounting-rate" id="accAnyRate" title="Parties avec au moins un gain 3L, 4L ou 5L">0,00 %</div>
+      </div>
+    </div>
+    <div class="accounting-note">Les coefficients de paiement et les probabilités des couloirs sont lus dans <strong>cartons.js</strong>.</div>
+  </div>
+</div>
+
+<script src="cartons.js"></script>
+<script>
+(() => {
+  const GAME_CONFIG = {
+    ballsPerGame: Number(window.GAME_CONFIG && window.GAME_CONFIG.ballsPerGame)
+  };
+  if (!Number.isInteger(GAME_CONFIG.ballsPerGame) || GAME_CONFIG.ballsPerGame < 1 || GAME_CONFIG.ballsPerGame > 100) {
+    throw new Error('GAME_CONFIG.ballsPerGame doit etre un entier compris entre 1 et 100.');
+  }
+  const MAX_BALLS = GAME_CONFIG.ballsPerGame;
+
+  if (!window.PAYTABLE || typeof window.PAYTABLE !== 'object') {
+    throw new Error('cartons.js doit definir window.PAYTABLE.');
+  }
+  const PAYTABLE = {
+    stake: Number(window.PAYTABLE.stake),
+    line3: Number(window.PAYTABLE.line3),
+    line4: Number(window.PAYTABLE.line4),
+    line5: Number(window.PAYTABLE.line5)
+  };
+  if (Object.values(PAYTABLE).some(value => !Number.isFinite(value) || value < 0)) {
+    throw new Error('PAYTABLE contient une valeur invalide.');
+  }
+
+  const corridorNames = Array.from({ length: 14 }, (_, i) => String.fromCharCode(65 + i));
+
+  // Probabilites des 14 couloirs lues dans cartons.js.
+  // Elles sont donnees en pourcentage et doivent totaliser 100 %.
+  if (!window.CORRIDOR_PROBABILITIES || typeof window.CORRIDOR_PROBABILITIES !== 'object') {
+    throw new Error('cartons.js doit definir window.CORRIDOR_PROBABILITIES.');
+  }
+  const corridorWeights = corridorNames.map(name => Number(window.CORRIDOR_PROBABILITIES[name]));
+  if (corridorWeights.some(value => !Number.isFinite(value) || value < 0)) {
+    throw new Error('CORRIDOR_PROBABILITIES contient une valeur invalide.');
+  }
+  const corridorProbabilityTotal = corridorWeights.reduce((a, b) => a + b, 0);
+  if (Math.abs(corridorProbabilityTotal - 100) > 0.001) {
+    throw new Error(`CORRIDOR_PROBABILITIES doit totaliser 100 %, total actuel = ${corridorProbabilityTotal}.`);
+  }
+
+  // Validation et chargement du mapping A..N depuis cartons.js.
+  if (!window.PASSAGES || typeof window.PASSAGES !== 'object') {
+    throw new Error('cartons.js doit definir window.PASSAGES.');
+  }
+
+  const allSlots = [];
+  const passageNumberCounts = new Map();
+  corridorNames.forEach((name, corridorIndex) => {
+    const pair = window.PASSAGES[name];
+    if (!Array.isArray(pair) || pair.length !== 2) {
+      throw new Error(`PASSAGES.${name} doit contenir exactement 2 numeros.`);
+    }
+    pair.forEach((number, idx) => {
+      if (!Number.isInteger(number) || number < 1 || number > 25) {
+        throw new Error(`PASSAGES.${name}[${idx}] doit etre un entier entre 1 et 25.`);
+      }
+      passageNumberCounts.set(number, (passageNumberCounts.get(number) || 0) + 1);
+      allSlots.push({
+        id: `${name}${idx + 1}`,
+        corridor: corridorIndex,
+        level: idx + 1,
+        number
+      });
+    });
+  });
+
+  if (allSlots.length !== 28) {
+    throw new Error('PASSAGES doit definir exactement 28 passages physiques.');
+  }
+  for (let number = 1; number <= 25; number++) {
+    if (!passageNumberCounts.has(number)) {
+      throw new Error(`PASSAGES doit contenir au moins une fois le numero ${number}.`);
+    }
+  }
+
+  if (!Array.isArray(window.CARTONS) || window.CARTONS.length !== 4) {
+    throw new Error('cartons.js doit definir exactement 4 cartons dans window.CARTONS.');
+  }
+
+  const slotsByCorridor = corridorNames.map((name, corridorIndex) => [
+    allSlots.find(s => s.corridor === corridorIndex && s.level === 1),
+    allSlots.find(s => s.corridor === corridorIndex && s.level === 2)
+  ]);
+
+  const cardsData = window.CARTONS.map((rows, cardIndex) => {
+    if (!Array.isArray(rows) || rows.length !== 5 || rows.some(row => !Array.isArray(row) || row.length !== 5)) {
+      throw new Error(`Carton ${cardIndex + 1} : il faut exactement 5 lignes de 5 numeros.`);
+    }
+    const numbers = rows.flat();
+    if (new Set(numbers).size !== 25) {
+      throw new Error(`Carton ${cardIndex + 1} : les 25 numeros doivent etre differents.`);
+    }
+    const expected = Array.from({ length: 25 }, (_, i) => i + 1);
+    const sorted = [...numbers].sort((a, b) => a - b);
+    if (sorted.some((number, i) => number !== expected[i])) {
+      throw new Error(`Carton ${cardIndex + 1} : il doit contenir exactement une fois chaque numero de 1 a 25.`);
+    }
+    return numbers;
+  });
+
+  let ballCount = 0;
+  let corridorPasses = Array(14).fill(0);
+  let activatedPassages = new Set();
+  let drawnNumbers = new Set();
+  let numberDrawCounts = new Map();
+  let history = [];
+  let totalGames = 0;
+  let totalLine3 = 0;
+  let totalLine4 = 0;
+  let totalLine5 = 0;
+  // Nombre de PARTIES ayant obtenu au moins un gain du niveau concerne.
+  // Ces compteurs sont distincts du nombre total de lignes, utilise pour OUT.
+  let winGames3 = 0;
+  let winGames4 = 0;
+  let winGames5 = 0;
+  let winGamesAny = 0;
+  let winGamesAtLeast4 = 0;
+  let autoRunning = false;
+
+  const corridorsEl = document.getElementById('corridors');
+  const cardsEl = document.getElementById('cards');
+  const counterEl = document.getElementById('counter');
+  const statusEl = document.getElementById('status');
+  const historyEl = document.getElementById('history');
+  const drawBtn = document.getElementById('drawBtn');
+  const autoBtn = document.getElementById('autoBtn');
+  const batchCountEl = document.getElementById('batchCount');
+  const batchBtn = document.getElementById('batchBtn');
+  const settingsBtn = document.getElementById('settingsBtn');
+  const accountingBackdrop = document.getElementById('accountingBackdrop');
+  const accountingCloseBtn = document.getElementById('accountingCloseBtn');
+  const accInEl = document.getElementById('accIn');
+  const acc3El = document.getElementById('acc3');
+  const acc4El = document.getElementById('acc4');
+  const acc5El = document.getElementById('acc5');
+  const acc3RateEl = document.getElementById('acc3Rate');
+  const acc4RateEl = document.getElementById('acc4Rate');
+  const acc5RateEl = document.getElementById('acc5Rate');
+  const accAnyRateEl = document.getElementById('accAnyRate');
+  const accOutEl = document.getElementById('accOut');
+  const accRtpEl = document.getElementById('accRtp');
+  const accInDetailEl = document.getElementById('accInDetail');
+  const acc3DetailEl = document.getElementById('acc3Detail');
+  const acc4DetailEl = document.getElementById('acc4Detail');
+  const acc5DetailEl = document.getElementById('acc5Detail');
+  const statGamesEl = document.getElementById('statGames');
+  const stat3El = document.getElementById('stat3');
+  const stat4El = document.getElementById('stat4');
+  const stat5El = document.getElementById('stat5');
+  const subtitleBallsEl = document.getElementById('subtitleBalls');
+
+  function updateConfiguredBallCount() {
+    if (subtitleBallsEl) {
+      subtitleBallsEl.textContent = `${MAX_BALLS} bille${MAX_BALLS > 1 ? 's' : ''} par partie`;
+    }
+    autoBtn.textContent = `LANCER ${MAX_BALLS} BILLE${MAX_BALLS > 1 ? 'S' : ''}`;
+  }
+
+  function buildBoardLines() {
+    const lines = [];
+    for (let r = 0; r < 5; r++) lines.push([0,1,2,3,4].map(c => r * 5 + c));
+    for (let c = 0; c < 5; c++) lines.push([0,1,2,3,4].map(r => r * 5 + c));
+
+    for (let startCol = 0; startCol < 5; startCol++) {
+      const line = [];
+      for (let r = 0, c = startCol; r < 5 && c < 5; r++, c++) line.push(r * 5 + c);
+      if (line.length >= 3) lines.push(line);
+    }
+    for (let startRow = 1; startRow < 5; startRow++) {
+      const line = [];
+      for (let r = startRow, c = 0; r < 5 && c < 5; r++, c++) line.push(r * 5 + c);
+      if (line.length >= 3) lines.push(line);
+    }
+    for (let startCol = 0; startCol < 5; startCol++) {
+      const line = [];
+      for (let r = 0, c = startCol; r < 5 && c >= 0; r++, c--) line.push(r * 5 + c);
+      if (line.length >= 3) lines.push(line);
+    }
+    for (let startRow = 1; startRow < 5; startRow++) {
+      const line = [];
+      for (let r = startRow, c = 4; r < 5 && c >= 0; r++, c--) line.push(r * 5 + c);
+      if (line.length >= 3) lines.push(line);
+    }
+    return lines;
+  }
+
+  const boardLines = buildBoardLines();
+
+  function weightedCorridor() {
+    const total = corridorWeights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < corridorWeights.length; i++) {
+      r -= corridorWeights[i];
+      if (r < 0) return i;
+    }
+    return corridorWeights.length - 1;
+  }
+
+  function renderCorridors() {
+    corridorsEl.innerHTML = '';
+    corridorNames.forEach((name, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'corridor';
+
+      [1, 2].forEach(level => {
+        const slot = allSlots.find(s => s.corridor === i && s.level === level);
+        const cell = document.createElement('div');
+        cell.className = 'corridor-slot' + (activatedPassages.has(slot.id) ? ' active' : '');
+        cell.id = `corridor-${slot.id}`;
+        cell.title = `Passage ${slot.id} = numero ${slot.number}`;
+        cell.innerHTML = `<div class="slot-number">${slot.number}</div><div class="slot-id">${slot.id}</div>`;
+        wrap.appendChild(cell);
+      });
+
+      const label = document.createElement('div');
+      label.className = 'corridor-name';
+      label.textContent = name;
+      wrap.appendChild(label);
+      corridorsEl.appendChild(wrap);
+    });
+  }
+
+  function renderCards() {
+    cardsEl.innerHTML = '';
+    cardsData.forEach((card, cardIndex) => {
+      const panel = document.createElement('div');
+      panel.className = 'card-panel';
+
+      const title = document.createElement('h2');
+      title.className = 'card-title';
+      title.textContent = `Carton ${cardIndex + 1}`;
+      panel.appendChild(title);
+
+      const grid = document.createElement('div');
+      grid.className = 'bingo-grid';
+
+      card.forEach(number => {
+        const cell = document.createElement('div');
+        cell.className = 'bingo-cell' + (drawnNumbers.has(number) ? ' hit' : '');
+        cell.dataset.number = String(number);
+        cell.title = `Numero ${number}`;
+        cell.innerHTML = `<div class="bingo-number">${number}</div>`;
+        grid.appendChild(cell);
+      });
+
+      panel.appendChild(grid);
+      cardsEl.appendChild(panel);
+    });
+
+    updateLineHighlights();
+  }
+
+  function analyzeCard(card, hitNumbers = drawnNumbers) {
+    const lineResults = [];
+    for (const indexes of boardLines) {
+      let run = [];
+      const flushRun = () => {
+        if (run.length >= 3) lineResults.push({ level: run.length, indexes: [...run] });
+        run = [];
+      };
+
+      for (const index of indexes) {
+        if (hitNumbers.has(card[index])) run.push(index);
+        else flushRun();
+      }
+      flushRun();
+    }
+    return lineResults;
+  }
+
+  function analyzeAllCards(hitNumbers = drawnNumbers) {
+    let count3 = 0, count4 = 0, count5 = 0;
+    const perCard = [];
+
+    cardsData.forEach(card => {
+      const lines = analyzeCard(card, hitNumbers);
+      perCard.push(lines);
+      lines.forEach(line => {
+        if (line.level === 3) count3++;
+        else if (line.level === 4) count4++;
+        else if (line.level === 5) count5++;
+      });
+    });
+
+    return { count3, count4, count5, perCard };
+  }
+
+  function updateLineHighlights() {
+    const analysis = analyzeAllCards();
+    document.querySelectorAll('.bingo-cell').forEach(cell => cell.classList.remove('line3', 'line4', 'line5'));
+
+    analysis.perCard.forEach((lines, cardIndex) => {
+      const cells = cardsEl.children[cardIndex]?.querySelectorAll('.bingo-cell');
+      if (!cells) return;
+      const bestLevelByCell = Array(25).fill(0);
+      lines.forEach(line => line.indexes.forEach(index => {
+        bestLevelByCell[index] = Math.max(bestLevelByCell[index], line.level);
+      }));
+
+      bestLevelByCell.forEach((level, index) => {
+        if (level >= 5) cells[index].classList.add('line5');
+        else if (level === 4) cells[index].classList.add('line4');
+        else if (level === 3) cells[index].classList.add('line3');
+      });
+    });
+
+    return analysis;
+  }
+
+  function updateInfo() {
+    counterEl.textContent = `Billes : ${ballCount} / ${MAX_BALLS}`;
+    historyEl.innerHTML = `<strong>Historique :</strong> ${history.length ? history.join(' · ') : '—'}`;
+    statGamesEl.textContent = totalGames;
+    stat3El.textContent = totalLine3;
+    stat4El.textContent = totalLine4;
+    stat5El.textContent = totalLine5;
+  }
+
+  function markSlot(slot) {
+    // Le passage physique et le numero de bingo sont deux notions differentes.
+    // Un passage ne s'allume que s'il a reellement ete emprunte.
+    activatedPassages.add(slot.id);
+
+    // Le contenu du passage (numero 1..25) est comptabilise a chaque sortie,
+    // meme si ce numero avait deja ete tire via un autre passage physique.
+    const numberCount = (numberDrawCounts.get(slot.number) || 0) + 1;
+    numberDrawCounts.set(slot.number, numberCount);
+
+    // Pour le bingo, un numero deja sorti reste simplement coche : il n'existe
+    // qu'une seule case de ce numero sur chaque carton.
+    drawnNumbers.add(slot.number);
+
+    const corridorCell = document.getElementById(`corridor-${slot.id}`);
+    if (corridorCell) corridorCell.classList.add('active');
+    document.querySelectorAll(`.bingo-cell[data-number="${slot.number}"]`).forEach(cell => cell.classList.add('hit'));
+    updateLineHighlights();
+    return numberCount;
+  }
+
+  function drawBall() {
+    if (ballCount >= MAX_BALLS) return;
+
+    ballCount++;
+    const corridorIndex = weightedCorridor();
+    corridorPasses[corridorIndex]++;
+
+    const corridorName = corridorNames[corridorIndex];
+    const pass = corridorPasses[corridorIndex];
+
+    if (pass <= 2) {
+      const slot = slotsByCorridor[corridorIndex][pass - 1];
+      const numberCount = markSlot(slot);
+      history.push(`${slot.id} → ${slot.number}`);
+      const repeatText = numberCount > 1 ? ` (${numberCount}e sortie du numero ${slot.number})` : '';
+      statusEl.textContent = `Bille ${ballCount}/${MAX_BALLS} : couloir ${corridorName}, passage ${pass} → numero ${slot.number}${repeatText}.`;
+    } else {
+      history.push(`${corridorName} (${pass}e)`);
+      statusEl.textContent = `Bille ${ballCount}/${MAX_BALLS} : couloir ${corridorName}, ${pass}e passage → aucun nouveau numéro.`;
+    }
+
+    updateInfo();
+
+    if (ballCount >= MAX_BALLS) {
+      const result = updateLineHighlights();
+      totalGames++;
+      totalLine3 += result.count3;
+      totalLine4 += result.count4;
+      totalLine5 += result.count5;
+      if (result.count3 > 0) winGames3++;
+      if (result.count4 > 0) winGames4++;
+      if (result.count5 > 0) winGames5++;
+      if (result.count4 > 0 || result.count5 > 0) winGamesAtLeast4++;
+      if (result.count3 > 0 || result.count4 > 0 || result.count5 > 0) winGamesAny++;
+      updateInfo();
+      updateAccounting();
+
+      drawBtn.disabled = false;
+      autoBtn.disabled = false;
+      statusEl.textContent += ` Fin : ${result.count3} ligne(s) de 3, ${result.count4} ligne(s) de 4, ${result.count5} BINGO(s).`;
+    }
+  }
+
+  function resetCurrentGame() {
+    ballCount = 0;
+    corridorPasses = Array(14).fill(0);
+    activatedPassages = new Set();
+    drawnNumbers = new Set();
+    numberDrawCounts = new Map();
+    history = [];
+
+    updateConfiguredBallCount();
+    renderCorridors();
+    renderCards();
+    updateInfo();
+    statusEl.textContent = 'Prêt. Lance la première bille.';
+    drawBtn.disabled = false;
+    autoBtn.disabled = false;
+    batchBtn.disabled = false;
+    batchCountEl.disabled = false;
+  }
+
+  function prepareFreshGameForAction() {
+    // Une partie terminee est reinitialisee automatiquement au prochain clic.
+    // Une partie partielle est conservee pour permettre de lancer les billes une a une.
+    if (ballCount >= MAX_BALLS) resetCurrentGame();
+  }
+
+  function simulateFastGame() {
+    const localPasses = Array(14).fill(0);
+    const localActivatedPassages = new Set();
+    const localDrawnNumbers = new Set();
+    const localNumberDrawCounts = new Map();
+    const localHistory = [];
+
+    for (let ball = 1; ball <= MAX_BALLS; ball++) {
+      const corridorIndex = weightedCorridor();
+      const pass = ++localPasses[corridorIndex];
+      const corridorName = corridorNames[corridorIndex];
+
+      if (pass <= 2) {
+        const slot = slotsByCorridor[corridorIndex][pass - 1];
+        localActivatedPassages.add(slot.id);
+        localDrawnNumbers.add(slot.number);
+        localNumberDrawCounts.set(slot.number, (localNumberDrawCounts.get(slot.number) || 0) + 1);
+        localHistory.push(`${slot.id} → ${slot.number}`);
+      } else {
+        localHistory.push(`${corridorName} (${pass}e)`);
+      }
+    }
+
+    return {
+      result: analyzeAllCards(localDrawnNumbers),
+      corridorPasses: localPasses,
+      activatedPassages: localActivatedPassages,
+      drawnNumbers: localDrawnNumbers,
+      numberDrawCounts: localNumberDrawCounts,
+      history: localHistory
+    };
+  }
+
+  async function simulateBatch() {
+    if (autoRunning) return;
+
+    const requested = Number.parseInt(batchCountEl.value, 10);
+    if (!Number.isInteger(requested) || requested < 1 || requested > 1000000) {
+      statusEl.textContent = 'Entre un nombre de parties compris entre 1 et 1 000 000.';
+      batchCountEl.focus();
+      return;
+    }
+
+    resetCurrentGame();
+    autoRunning = true;
+    drawBtn.disabled = true;
+    autoBtn.disabled = true;
+    batchBtn.disabled = true;
+    batchCountEl.disabled = true;
+    statusEl.textContent = `Simulation de ${requested.toLocaleString('fr-FR')} partie(s)...`;
+
+    let add3 = 0, add4 = 0, add5 = 0;
+    let addWinGames3 = 0, addWinGames4 = 0, addWinGames5 = 0, addWinGamesAny = 0, addWinGamesAtLeast4 = 0;
+    let lastGame = null;
+    const chunkSize = 5000;
+
+    for (let i = 0; i < requested; i++) {
+      lastGame = simulateFastGame();
+      add3 += lastGame.result.count3;
+      add4 += lastGame.result.count4;
+      add5 += lastGame.result.count5;
+      if (lastGame.result.count3 > 0) addWinGames3++;
+      if (lastGame.result.count4 > 0) addWinGames4++;
+      if (lastGame.result.count5 > 0) addWinGames5++;
+      if (lastGame.result.count4 > 0 || lastGame.result.count5 > 0) addWinGamesAtLeast4++;
+      if (lastGame.result.count3 > 0 || lastGame.result.count4 > 0 || lastGame.result.count5 > 0) addWinGamesAny++;
+
+      if ((i + 1) % chunkSize === 0 && i + 1 < requested) {
+        statusEl.textContent = `Simulation : ${(i + 1).toLocaleString('fr-FR')} / ${requested.toLocaleString('fr-FR')} parties`;
+        await new Promise(resolve => requestAnimationFrame(resolve));
+      }
+    }
+
+    totalGames += requested;
+    totalLine3 += add3;
+    totalLine4 += add4;
+    totalLine5 += add5;
+    winGames3 += addWinGames3;
+    winGames4 += addWinGames4;
+    winGames5 += addWinGames5;
+    winGamesAny += addWinGamesAny;
+    winGamesAtLeast4 += addWinGamesAtLeast4;
+
+    // Affiche la derniere partie simulee pour garder un etat visuel coherent.
+    ballCount = MAX_BALLS;
+    corridorPasses = lastGame.corridorPasses;
+    activatedPassages = lastGame.activatedPassages;
+    drawnNumbers = lastGame.drawnNumbers;
+    numberDrawCounts = lastGame.numberDrawCounts;
+    history = lastGame.history;
+
+    renderCorridors();
+    renderCards();
+    updateInfo();
+    updateAccounting();
+
+    autoRunning = false;
+    batchCountEl.disabled = false;
+    batchBtn.disabled = false;
+    drawBtn.disabled = false;
+    autoBtn.disabled = false;
+    statusEl.textContent = `Simulation terminée : ${requested.toLocaleString('fr-FR')} partie(s) ajoutée(s) · 3L=${add3.toLocaleString('fr-FR')} · 4L=${add4.toLocaleString('fr-FR')} · 5L=${add5.toLocaleString('fr-FR')}. Écran = dernière partie simulée.`;
+  }
+
+  const moneyFormat = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+  const numberFormat = new Intl.NumberFormat('fr-FR');
+
+  function updateAccounting() {
+    const inValue = totalGames * PAYTABLE.stake;
+    const out3 = totalLine3 * PAYTABLE.line3;
+    const out4 = totalLine4 * PAYTABLE.line4;
+    const out5 = totalLine5 * PAYTABLE.line5;
+    const totalOut = out3 + out4 + out5;
+    const rtp = inValue > 0 ? (totalOut / inValue) * 100 : 0;
+    const rate3 = totalGames > 0 ? (winGames3 / totalGames) * 100 : 0;
+    const rate4 = totalGames > 0 ? (winGames4 / totalGames) * 100 : 0;
+    const rate5 = totalGames > 0 ? (winGames5 / totalGames) * 100 : 0;
+    const rateAny = totalGames > 0 ? (winGamesAny / totalGames) * 100 : 0;
+
+    accInEl.textContent = moneyFormat.format(inValue);
+    acc3El.textContent = moneyFormat.format(out3);
+    acc4El.textContent = moneyFormat.format(out4);
+    acc5El.textContent = moneyFormat.format(out5);
+    acc3RateEl.textContent = `${rate3.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %`;
+    acc4RateEl.textContent = `${rate4.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %`;
+    acc5RateEl.textContent = `${rate5.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %`;
+    accAnyRateEl.textContent = `${rateAny.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %`;
+    accOutEl.textContent = moneyFormat.format(totalOut);
+
+    accInDetailEl.textContent = `${numberFormat.format(totalGames)} partie(s) × ${moneyFormat.format(PAYTABLE.stake)}`;
+    acc3DetailEl.textContent = `${numberFormat.format(totalLine3)} ligne(s) × ${moneyFormat.format(PAYTABLE.line3)} · ${numberFormat.format(winGames3)} partie(s) avec au moins un 3L`;
+    acc4DetailEl.textContent = `${numberFormat.format(totalLine4)} ligne(s) × ${moneyFormat.format(PAYTABLE.line4)} · ${numberFormat.format(winGames4)} partie(s) avec au moins un 4L`;
+    acc5DetailEl.textContent = `${numberFormat.format(totalLine5)} ligne(s) × ${moneyFormat.format(PAYTABLE.line5)} · ${numberFormat.format(winGames5)} partie(s) avec au moins un 5L`;
+    accRtpEl.textContent = `RTP brut : ${rtp.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} % · ${numberFormat.format(winGamesAny)} partie(s) gagnante(s)`;
+  }
+
+  function openAccounting() {
+    updateAccounting();
+    accountingBackdrop.classList.add('open');
+  }
+
+  function closeAccounting() {
+    accountingBackdrop.classList.remove('open');
+  }
+
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+  async function drawConfiguredBalls() {
+    if (autoRunning) return;
+    prepareFreshGameForAction();
+
+    autoRunning = true;
+    drawBtn.disabled = true;
+    autoBtn.disabled = true;
+
+    while (ballCount < MAX_BALLS) {
+      drawBall();
+      if (ballCount < MAX_BALLS) await sleep(350);
+    }
+
+    autoRunning = false;
+    batchBtn.disabled = false;
+    batchCountEl.disabled = false;
+  }
+
+  drawBtn.addEventListener('click', () => {
+    if (autoRunning) return;
+    prepareFreshGameForAction();
+    drawBall();
+  });
+  autoBtn.addEventListener('click', drawConfiguredBalls);
+  batchBtn.addEventListener('click', simulateBatch);
+  batchCountEl.addEventListener('keydown', event => {
+    if (event.key === 'Enter') simulateBatch();
+  });
+  settingsBtn.addEventListener('click', openAccounting);
+  accountingCloseBtn.addEventListener('click', closeAccounting);
+  accountingBackdrop.addEventListener('click', event => {
+    if (event.target === accountingBackdrop) closeAccounting();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeAccounting();
+  });
+
+  updateConfiguredBallCount();
+  renderCorridors();
+  renderCards();
+  updateInfo();
+  updateAccounting();
+})();
+</script>
+</body>
+</html>
