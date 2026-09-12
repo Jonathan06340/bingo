@@ -1,6 +1,6 @@
-// Configuration V12 - renumerotation visuelle des numeros 1..25.
-// La permutation est appliquee a PASSAGES et CARTONS simultanement :
-// probabilites, lignes realisables et RTP restent strictement identiques a V11.
+// Configuration d origine V14 - valeurs chargees au premier demarrage ou apres restauration.
+// Les reglages modifies dans l interface sont conserves dans le localStorage du navigateur.
+// Ce fichier reste la reference pour le bouton RESTAURER ORIGINE.
 
 window.GAME_CONFIG = {
   ballsPerGame: 5
