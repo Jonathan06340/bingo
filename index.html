@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Prototype Bingo - 14 couloirs - V17</title>
+<title>Prototype Bingo - 14 couloirs - V18</title>
 <style>
   :root {
     --bg: #f4f5f7;
@@ -305,6 +305,8 @@
   .accounting-value { font-weight: 900; font-size: 18px; white-space: nowrap; text-align: right; }
   .accounting-rate { font-weight: 900; font-size: 17px; white-space: nowrap; text-align: right; }
   .accounting-note { margin-top: 10px; color: var(--muted); font-size: 12px; }
+  .accounting-actions { display: flex; justify-content: flex-end; margin-top: 12px; }
+  #accountingResetBtn { background: #c73a3a; min-height: 36px; padding: 0 12px; font-size: 11px; }
 
   .stats {
     display: grid;
@@ -723,7 +725,7 @@
   <section class="cards" id="cards"></section>
   <div class="history" id="history"><strong>Historique :</strong> —</div>
 </div>
-<div class="signature">Version 17 · By JT for PMGAMES</div>
+<div class="signature">Version 18 · By JT for PMGAMES</div>
 
 <div class="modal-backdrop" id="accountingBackdrop" role="dialog" aria-modal="true" aria-labelledby="accountingTitle">
   <div class="accounting-modal">
@@ -768,7 +770,8 @@
           <div class="accounting-rate" id="accAnyRate" title="Parties avec au moins un gain 3L, 4L ou 5L">0,00 %</div>
         </div>
       </div>
-      <div class="accounting-note">Les montants utilisent les réglages actifs. Les modifications sauvegardées localement ne changent pas le fichier <strong>cartons.js</strong>.</div>
+      <div class="accounting-actions"><button id="accountingResetBtn" type="button">RESET COMPTABILITÉ</button></div>
+      <div class="accounting-note">La comptabilité est sauvegardée automatiquement sur ce navigateur. RESET COMPTABILITÉ efface uniquement les compteurs locaux. Les montants utilisent les réglages actifs.</div>
     </div>
 
     <div class="modal-panel" id="settingsPanel">
@@ -816,11 +819,12 @@
   </div>
 </div>
 
-<script src="cartons.js?v=17"></script>
+<script src="cartons.js?v=18"></script>
 <script>
 (() => {
   const STORAGE_KEY = 'jtPmgamesBingoSettingsV2';
   const LEGACY_STORAGE_KEY = 'jtPmgamesBingoSettingsV1';
+  const ACCOUNTING_STORAGE_KEY = 'jtPmgamesBingoAccountingV1';
   const SETTINGS_VERSION = 2;
   const DISTRIBUTION_TOTAL = 1000;
   const corridorNames = Array.from({ length: 14 }, (_, i) => String.fromCharCode(65 + i));
@@ -917,6 +921,28 @@
     }
   }
 
+  function normalizeAccounting(raw) {
+    const keys = ['totalGames', 'totalLine3', 'totalLine4', 'totalLine5', 'winGames3', 'winGames4', 'winGames5', 'winGamesAny', 'winGamesAtLeast4'];
+    const clean = {};
+    for (const key of keys) {
+      const value = Number(raw?.[key] ?? 0);
+      if (!Number.isFinite(value) || value < 0) throw new Error(`Comptabilité locale invalide : ${key}.`);
+      clean[key] = Math.floor(value);
+    }
+    return clean;
+  }
+
+  function readLocalAccounting() {
+    try {
+      const raw = localStorage.getItem(ACCOUNTING_STORAGE_KEY);
+      return raw ? normalizeAccounting(JSON.parse(raw)) : normalizeAccounting(null);
+    } catch (error) {
+      console.warn('Comptabilité locale ignorée :', error);
+      try { localStorage.removeItem(ACCOUNTING_STORAGE_KEY); } catch (_) {}
+      return normalizeAccounting(null);
+    }
+  }
+
   const cloneSettings = settings => JSON.parse(JSON.stringify(settings));
   let activeSettings = readLocalSettings() || cloneSettings(ORIGINAL_SETTINGS);
   let MAX_BALLS = activeSettings.ballsPerGame;
@@ -990,17 +1016,18 @@
   let drawnNumbers = new Set();
   let numberDrawCounts = new Map();
   let history = [];
-  let totalGames = 0;
-  let totalLine3 = 0;
-  let totalLine4 = 0;
-  let totalLine5 = 0;
+  const savedAccounting = readLocalAccounting();
+  let totalGames = savedAccounting.totalGames;
+  let totalLine3 = savedAccounting.totalLine3;
+  let totalLine4 = savedAccounting.totalLine4;
+  let totalLine5 = savedAccounting.totalLine5;
   // Nombre de PARTIES ayant obtenu au moins un gain du niveau concerne.
   // Ces compteurs sont distincts du nombre total de lignes, utilise pour OUT.
-  let winGames3 = 0;
-  let winGames4 = 0;
-  let winGames5 = 0;
-  let winGamesAny = 0;
-  let winGamesAtLeast4 = 0;
+  let winGames3 = savedAccounting.winGames3;
+  let winGames4 = savedAccounting.winGames4;
+  let winGames5 = savedAccounting.winGames5;
+  let winGamesAny = savedAccounting.winGamesAny;
+  let winGamesAtLeast4 = savedAccounting.winGamesAtLeast4;
   let autoRunning = false;
 
   const corridorsEl = document.getElementById('corridors');
@@ -1015,6 +1042,7 @@
   const settingsBtn = document.getElementById('settingsBtn');
   const accountingBackdrop = document.getElementById('accountingBackdrop');
   const accountingCloseBtn = document.getElementById('accountingCloseBtn');
+  const accountingResetBtn = document.getElementById('accountingResetBtn');
   const accInEl = document.getElementById('accIn');
   const acc3El = document.getElementById('acc3');
   const acc4El = document.getElementById('acc4');
@@ -1078,7 +1106,7 @@
     updateProbabilityTotal();
   }
 
-  // Mode ASSISTÉ V17 : comportement de "corde" sans butée artificielle.
+  // Mode ASSISTÉ V18 : comportement de "corde" sans butée artificielle.
   // Le couloir manipulé peut aller de 0 à 1000. La déformation idéale entraîne
   // d'abord les voisins dans le même sens et fait compenser les couloirs éloignés.
   // Si cette déformation ferait passer certains couloirs sous 0, on ne bloque plus
@@ -1333,6 +1361,15 @@
     settingsMessageEl.className = `settings-message${kind ? ` ${kind}` : ''}`;
   }
 
+  function saveAccounting() {
+    const accounting = {
+      totalGames, totalLine3, totalLine4, totalLine5,
+      winGames3, winGames4, winGames5, winGamesAny, winGamesAtLeast4
+    };
+    try { localStorage.setItem(ACCOUNTING_STORAGE_KEY, JSON.stringify(accounting)); }
+    catch (error) { console.warn('Impossible de sauvegarder la comptabilité locale :', error); }
+  }
+
   function resetAllStatistics() {
     totalGames = 0;
     totalLine3 = 0;
@@ -1343,6 +1380,7 @@
     winGames5 = 0;
     winGamesAny = 0;
     winGamesAtLeast4 = 0;
+    saveAccounting();
   }
 
   function applyRuntimeSettings(settings, { persist = false, message = '' } = {}) {
@@ -1641,6 +1679,7 @@
       if (result.count5 > 0) winGames5++;
       if (result.count4 > 0 || result.count5 > 0) winGamesAtLeast4++;
       if (result.count3 > 0 || result.count4 > 0 || result.count5 > 0) winGamesAny++;
+      saveAccounting();
       updateInfo();
       updateAccounting();
 
@@ -1757,6 +1796,7 @@
     winGames5 += addWinGames5;
     winGamesAny += addWinGamesAny;
     winGamesAtLeast4 += addWinGamesAtLeast4;
+    saveAccounting();
 
     // Affiche la derniere partie simulee pour garder un etat visuel coherent.
     ballCount = MAX_BALLS;
@@ -1886,6 +1926,14 @@
   settingsExportBtn.addEventListener('click', exportSettingsFile);
   settingsImportBtn.addEventListener('click', () => settingsImportInput.click());
   settingsImportInput.addEventListener('change', () => importSettingsFile(settingsImportInput.files?.[0]));
+
+  accountingResetBtn.addEventListener('click', () => {
+    if (!window.confirm('Remettre toute la comptabilité à zéro ?')) return;
+    resetAllStatistics();
+    updateInfo();
+    updateAccounting();
+    statusEl.textContent = 'Comptabilité remise à zéro. Les réglages sont conservés.';
+  });
 
   accountingCloseBtn.addEventListener('click', closeAccounting);
   accountingBackdrop.addEventListener('click', event => {
