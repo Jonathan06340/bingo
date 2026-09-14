@@ -435,7 +435,7 @@
 
   .modal-tabs {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 6px;
     margin-bottom: 10px;
   }
@@ -664,6 +664,161 @@
     color: var(--muted);
   }
 
+  .layout-editor {
+    display: grid;
+    gap: 12px;
+  }
+
+  .layout-section {
+    border: 1px solid #cfd4da;
+    border-radius: 8px;
+    padding: 10px;
+    background: #fafbfc;
+  }
+
+  .layout-section h3 {
+    margin: 0 0 8px;
+    font-size: 15px;
+  }
+
+  .passage-editor-grid {
+    display: grid;
+    grid-template-columns: repeat(14, minmax(52px, 1fr));
+    gap: 5px;
+    min-width: 820px;
+  }
+
+  .passage-editor-wrap { overflow-x: auto; padding-bottom: 3px; }
+
+  .passage-editor-column {
+    display: grid;
+    gap: 5px;
+    text-align: center;
+  }
+
+  .passage-editor-name {
+    font-size: 13px;
+    font-weight: 900;
+  }
+
+  .passage-level-label {
+    margin-top: 1px;
+    font-size: 9px;
+    font-weight: 850;
+    color: var(--muted);
+  }
+
+  .step-control {
+    display: grid;
+    grid-template-rows: 24px 34px 24px;
+    border: 1px solid #c8cdd3;
+    border-radius: 7px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .step-control button {
+    min-height: 0;
+    padding: 0;
+    border-radius: 0;
+    background: #e9edf2;
+    color: #222;
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  .step-control .step-value {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 950;
+    font-size: 17px;
+    border-top: 1px solid #d6d9dd;
+    border-bottom: 1px solid #d6d9dd;
+  }
+
+  .step-control .step-caption {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .card-editor-toolbar {
+    display: grid;
+    grid-template-columns: auto minmax(150px, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    max-width: 430px;
+    margin: 0 auto 10px;
+  }
+
+  .card-editor-toolbar button {
+    min-height: 36px;
+    padding: 0 12px;
+  }
+
+  .card-editor-title {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 950;
+  }
+
+  .editable-card-grid {
+    width: min(430px, 100%);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    border-left: 1px solid #858c94;
+    border-top: 1px solid #858c94;
+  }
+
+  .editable-card-cell {
+    border-right: 1px solid #858c94;
+    border-bottom: 1px solid #858c94;
+    background: #fff;
+    min-width: 0;
+  }
+
+  .editable-card-cell .step-control {
+    border: 0;
+    border-radius: 0;
+    grid-template-rows: 25px 38px 25px;
+  }
+
+  .editable-card-cell .step-value { font-size: 19px; }
+
+  .layout-actions {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  #layoutSaveCardBtn { background: #218838; }
+  #layoutRestoreCardBtn { background: #c73a3a; }
+
+  .layout-message {
+    min-height: 18px;
+    margin-top: 8px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--muted);
+  }
+  .layout-message.success { color: #17803d; }
+  .layout-message.error { color: #b42318; }
+  .layout-message.pending { color: #9a6700; }
+
+  .layout-note {
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+
   @media (max-width: 900px) {
     body { overflow: auto; }
     .app { height: auto; min-height: 100dvh; overflow: visible; }
@@ -689,7 +844,7 @@
       <div class="subtitle">25 numéros de bingo / 28 passages · <span id="subtitleBalls">billes par partie</span> · 1er passage = numéro haut · 2e passage = numéro bas</div>
     </div>
     <div class="counter" id="counter">Billes : 0</div>
-    <button class="gear-button" id="settingsBtn" type="button" title="Comptabilité et réglages" aria-label="Ouvrir la comptabilité et les réglages">⚙</button>
+    <button class="gear-button" id="settingsBtn" type="button" title="Comptabilité, réglages et cartons" aria-label="Ouvrir la comptabilité, les réglages et les cartons">⚙</button>
   </div>
 
   <section class="panel">
@@ -725,18 +880,19 @@
   <section class="cards" id="cards"></section>
   <div class="history" id="history"><strong>Historique :</strong> —</div>
 </div>
-<div class="signature">Version 18 · By JT for PMGAMES</div>
+<div class="signature">Version 19 · By JT for PMGAMES</div>
 
 <div class="modal-backdrop" id="accountingBackdrop" role="dialog" aria-modal="true" aria-labelledby="accountingTitle">
   <div class="accounting-modal">
     <div class="modal-head">
-      <h2 id="accountingTitle">Comptabilité & réglages</h2>
+      <h2 id="accountingTitle">Comptabilité, réglages & cartons</h2>
       <button class="modal-close" id="accountingCloseBtn" type="button" aria-label="Fermer">×</button>
     </div>
 
     <div class="modal-tabs">
       <button class="modal-tab active" id="tabAccountingBtn" type="button">COMPTABILITÉ</button>
       <button class="modal-tab" id="tabSettingsBtn" type="button">RÉGLAGES</button>
+      <button class="modal-tab" id="tabLayoutBtn" type="button">CARTONS / NUMÉROS</button>
     </div>
 
     <div class="modal-panel active" id="accountingPanel">
@@ -816,15 +972,44 @@
         <div class="settings-note">Sauvegarde locale = uniquement dans ce navigateur. Export/Import permet de transférer les mêmes réglages sur un autre poste. Restaurer origine efface la sauvegarde locale et reprend les valeurs de <strong>cartons.js</strong>. Les couloirs utilisent des poids entiers ; si le total DIRECT diffère de 1000, le tirage conserve leurs proportions relatives sans modifier les valeurs saisies.</div>
       </div>
     </div>
+
+    <div class="modal-panel" id="layoutPanel">
+      <div class="layout-editor">
+        <div class="layout-section">
+          <h3>Numéros des 28 passages · couloirs A à N</h3>
+          <div class="passage-editor-wrap">
+            <div class="passage-editor-grid" id="passageEditor"></div>
+          </div>
+          <div class="layout-note">▲ / ▼ modifie chaque numéro avec rotation aux limites : 25 → 1 et 1 → 25. Les modifications des couloirs sont appliquées et sauvegardées localement immédiatement.</div>
+        </div>
+
+        <div class="layout-section">
+          <h3>Édition des cartons</h3>
+          <div class="card-editor-toolbar">
+            <button id="layoutPrevCardBtn" type="button" title="Carton précédent">◀</button>
+            <div class="card-editor-title" id="layoutCardTitle">Carton 1</div>
+            <button id="layoutNextCardBtn" type="button" title="Carton suivant">▶</button>
+          </div>
+          <div class="editable-card-grid" id="cardEditor"></div>
+          <div class="layout-actions">
+            <button id="layoutSaveCardBtn" type="button">SAUVEGARDER LE CARTON</button>
+            <button id="layoutRestoreCardBtn" type="button">RESTAURER LE CARTON</button>
+          </div>
+          <div class="layout-message" id="layoutMessage"></div>
+          <div class="layout-note">▲ / ▼ fait tourner les valeurs 1…25. Pour garder un carton valide, le numéro demandé est échangé automatiquement avec celui déjà présent. Les flèches ◀ / ▶ des cartons tournent aussi aux limites : 1 ↔ 4.</div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<script src="cartons.js?v=18"></script>
+<script src="cartons.js?v=19"></script>
 <script>
 (() => {
   const STORAGE_KEY = 'jtPmgamesBingoSettingsV2';
   const LEGACY_STORAGE_KEY = 'jtPmgamesBingoSettingsV1';
   const ACCOUNTING_STORAGE_KEY = 'jtPmgamesBingoAccountingV1';
+  const LAYOUT_STORAGE_KEY = 'jtPmgamesBingoLayoutV1';
   const SETTINGS_VERSION = 2;
   const DISTRIBUTION_TOTAL = 1000;
   const corridorNames = Array.from({ length: 14 }, (_, i) => String.fromCharCode(65 + i));
@@ -950,66 +1135,92 @@
   let corridorWeights = corridorNames.map(name => activeSettings.corridorWeights[name]);
   let probabilityMode = activeSettings.probabilityMode || 'direct';
 
-  // Validation et chargement du mapping A..N depuis cartons.js.
-  if (!window.PASSAGES || typeof window.PASSAGES !== 'object') {
-    throw new Error('cartons.js doit definir window.PASSAGES.');
+  function cloneLayout(layout) {
+    return JSON.parse(JSON.stringify(layout));
   }
 
-  const allSlots = [];
-  const passageNumberCounts = new Map();
-  corridorNames.forEach((name, corridorIndex) => {
-    const pair = window.PASSAGES[name];
-    if (!Array.isArray(pair) || pair.length !== 2) {
-      throw new Error(`PASSAGES.${name} doit contenir exactement 2 numeros.`);
-    }
-    pair.forEach((number, idx) => {
-      if (!Number.isInteger(number) || number < 1 || number > 25) {
-        throw new Error(`PASSAGES.${name}[${idx}] doit etre un entier entre 1 et 25.`);
-      }
-      passageNumberCounts.set(number, (passageNumberCounts.get(number) || 0) + 1);
-      allSlots.push({
-        id: `${name}${idx + 1}`,
-        corridor: corridorIndex,
-        level: idx + 1,
-        number
+  function normalizeAndValidateLayout(raw) {
+    if (!raw || typeof raw !== 'object') throw new Error('Configuration cartons / numéros invalide.');
+    const sourcePassages = raw.passages || raw.PASSAGES;
+    const sourceCartons = raw.cartons || raw.CARTONS;
+    if (!sourcePassages || typeof sourcePassages !== 'object') throw new Error('PASSAGES manquant.');
+    if (!Array.isArray(sourceCartons) || sourceCartons.length !== 4) throw new Error('Il faut exactement 4 cartons.');
+
+    const passages = {};
+    const counts = new Map();
+    corridorNames.forEach(name => {
+      const pair = sourcePassages[name];
+      if (!Array.isArray(pair) || pair.length !== 2) throw new Error(`PASSAGES.${name} doit contenir exactement 2 numéros.`);
+      passages[name] = pair.map((value, index) => {
+        const number = Number(value);
+        if (!Number.isInteger(number) || number < 1 || number > 25) throw new Error(`PASSAGES.${name}[${index}] doit être entre 1 et 25.`);
+        counts.set(number, (counts.get(number) || 0) + 1);
+        return number;
       });
     });
-  });
+    for (let number = 1; number <= 25; number++) {
+      if (!counts.has(number)) throw new Error(`Le mapping doit contenir au moins une fois le numéro ${number}.`);
+    }
 
-  if (allSlots.length !== 28) {
-    throw new Error('PASSAGES doit definir exactement 28 passages physiques.');
+    const cartons = sourceCartons.map((rows, cardIndex) => {
+      if (!Array.isArray(rows) || rows.length !== 5 || rows.some(row => !Array.isArray(row) || row.length !== 5)) {
+        throw new Error(`Carton ${cardIndex + 1} : il faut exactement 5 lignes de 5 numéros.`);
+      }
+      const numbers = rows.flat().map(Number);
+      const expected = Array.from({ length: 25 }, (_, i) => i + 1);
+      const sorted = [...numbers].sort((a, b) => a - b);
+      if (sorted.some((number, i) => number !== expected[i])) {
+        throw new Error(`Carton ${cardIndex + 1} : il doit contenir exactement une fois chaque numéro de 1 à 25.`);
+      }
+      return Array.from({ length: 5 }, (_, row) => numbers.slice(row * 5, row * 5 + 5));
+    });
+    return { passages, cartons };
   }
-  for (let number = 1; number <= 25; number++) {
-    if (!passageNumberCounts.has(number)) {
-      throw new Error(`PASSAGES doit contenir au moins une fois le numero ${number}.`);
+
+  if (!window.PASSAGES || !window.CARTONS) throw new Error('cartons.js doit définir PASSAGES et CARTONS.');
+  const ORIGINAL_LAYOUT = normalizeAndValidateLayout({ passages: window.PASSAGES, cartons: window.CARTONS });
+
+  function readLocalLayout() {
+    try {
+      const raw = localStorage.getItem(LAYOUT_STORAGE_KEY);
+      return raw ? normalizeAndValidateLayout(JSON.parse(raw)) : null;
+    } catch (error) {
+      console.warn('Configuration cartons / numéros locale ignorée :', error);
+      try { localStorage.removeItem(LAYOUT_STORAGE_KEY); } catch (_) {}
+      return null;
     }
   }
 
-  if (!Array.isArray(window.CARTONS) || window.CARTONS.length !== 4) {
-    throw new Error('cartons.js doit definir exactement 4 cartons dans window.CARTONS.');
+  function saveLayout() {
+    try { localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(activeLayout)); }
+    catch (error) { console.warn('Impossible de sauvegarder cartons / numéros :', error); }
   }
 
-  const slotsByCorridor = corridorNames.map((name, corridorIndex) => [
-    allSlots.find(s => s.corridor === corridorIndex && s.level === 1),
-    allSlots.find(s => s.corridor === corridorIndex && s.level === 2)
-  ]);
+  let activeLayout = readLocalLayout() || cloneLayout(ORIGINAL_LAYOUT);
+  let allSlots = [];
+  let slotsByCorridor = [];
+  let cardsData = [];
 
-  const cardsData = window.CARTONS.map((rows, cardIndex) => {
-    if (!Array.isArray(rows) || rows.length !== 5 || rows.some(row => !Array.isArray(row) || row.length !== 5)) {
-      throw new Error(`Carton ${cardIndex + 1} : il faut exactement 5 lignes de 5 numeros.`);
-    }
-    const numbers = rows.flat();
-    if (new Set(numbers).size !== 25) {
-      throw new Error(`Carton ${cardIndex + 1} : les 25 numeros doivent etre differents.`);
-    }
-    const expected = Array.from({ length: 25 }, (_, i) => i + 1);
-    const sorted = [...numbers].sort((a, b) => a - b);
-    if (sorted.some((number, i) => number !== expected[i])) {
-      throw new Error(`Carton ${cardIndex + 1} : il doit contenir exactement une fois chaque numero de 1 a 25.`);
-    }
-    return numbers;
-  });
+  function rebuildLayoutStructures() {
+    allSlots = [];
+    corridorNames.forEach((name, corridorIndex) => {
+      activeLayout.passages[name].forEach((number, idx) => {
+        allSlots.push({
+          id: `${name}${idx + 1}`,
+          corridor: corridorIndex,
+          level: idx + 1,
+          number
+        });
+      });
+    });
+    slotsByCorridor = corridorNames.map((name, corridorIndex) => [
+      allSlots.find(slot => slot.corridor === corridorIndex && slot.level === 1),
+      allSlots.find(slot => slot.corridor === corridorIndex && slot.level === 2)
+    ]);
+    cardsData = activeLayout.cartons.map(rows => rows.flat());
+  }
 
+  rebuildLayoutStructures();
   let ballCount = 0;
   let corridorPasses = Array(14).fill(0);
   let activatedPassages = new Set();
@@ -1064,8 +1275,18 @@
   const subtitleBallsEl = document.getElementById('subtitleBalls');
   const tabAccountingBtn = document.getElementById('tabAccountingBtn');
   const tabSettingsBtn = document.getElementById('tabSettingsBtn');
+  const tabLayoutBtn = document.getElementById('tabLayoutBtn');
   const accountingPanel = document.getElementById('accountingPanel');
   const settingsPanel = document.getElementById('settingsPanel');
+  const layoutPanel = document.getElementById('layoutPanel');
+  const passageEditorEl = document.getElementById('passageEditor');
+  const cardEditorEl = document.getElementById('cardEditor');
+  const layoutCardTitleEl = document.getElementById('layoutCardTitle');
+  const layoutPrevCardBtn = document.getElementById('layoutPrevCardBtn');
+  const layoutNextCardBtn = document.getElementById('layoutNextCardBtn');
+  const layoutSaveCardBtn = document.getElementById('layoutSaveCardBtn');
+  const layoutRestoreCardBtn = document.getElementById('layoutRestoreCardBtn');
+  const layoutMessageEl = document.getElementById('layoutMessage');
   const setBallsEl = document.getElementById('setBalls');
   const setStakeEl = document.getElementById('setStake');
   const setLine3El = document.getElementById('setLine3');
@@ -1403,13 +1624,186 @@
   }
 
   function switchModalPanel(panel) {
+    const isAccounting = panel === 'accounting';
     const isSettings = panel === 'settings';
-    tabAccountingBtn.classList.toggle('active', !isSettings);
+    const isLayout = panel === 'layout';
+    tabAccountingBtn.classList.toggle('active', isAccounting);
     tabSettingsBtn.classList.toggle('active', isSettings);
-    accountingPanel.classList.toggle('active', !isSettings);
+    tabLayoutBtn.classList.toggle('active', isLayout);
+    accountingPanel.classList.toggle('active', isAccounting);
     settingsPanel.classList.toggle('active', isSettings);
+    layoutPanel.classList.toggle('active', isLayout);
     if (isSettings) { settingsToForm(activeSettings); showSettingsMessage(''); }
+    else if (isLayout) { renderLayoutEditors(); }
     else updateAccounting();
+  }
+
+  function rotateWrapped(value, delta, min, max) {
+    const span = max - min + 1;
+    return ((value - min + delta) % span + span) % span + min;
+  }
+
+  function showLayoutMessage(text, kind = '') {
+    layoutMessageEl.textContent = text;
+    layoutMessageEl.className = `layout-message${kind ? ` ${kind}` : ''}`;
+  }
+
+  let editingCardIndex = 0;
+  let draftCartons = cloneLayout(activeLayout).cartons;
+
+  function createStepControl(value, onStep, label) {
+    const control = document.createElement('div');
+    control.className = 'step-control';
+    const up = document.createElement('button');
+    up.type = 'button';
+    up.textContent = '▲';
+    up.title = `Incrémenter ${label}`;
+    const display = document.createElement('div');
+    display.className = 'step-value';
+    display.textContent = value;
+    const down = document.createElement('button');
+    down.type = 'button';
+    down.textContent = '▼';
+    down.title = `Décrémenter ${label}`;
+    up.addEventListener('click', () => onStep(+1));
+    down.addEventListener('click', () => onStep(-1));
+    control.append(up, display, down);
+    return control;
+  }
+
+  function findPassageLocations(number, excludeName = null, excludeLevel = null) {
+    const matches = [];
+    corridorNames.forEach(name => activeLayout.passages[name].forEach((value, index) => {
+      const level = index + 1;
+      if (value === number && !(name === excludeName && level === excludeLevel)) matches.push({ name, level });
+    }));
+    return matches;
+  }
+
+  function countPassageNumber(number) {
+    let count = 0;
+    corridorNames.forEach(name => activeLayout.passages[name].forEach(value => { if (value === number) count++; }));
+    return count;
+  }
+
+  function editPassageNumber(name, level, delta) {
+    const index = level - 1;
+    const oldValue = activeLayout.passages[name][index];
+    const newValue = rotateWrapped(oldValue, delta, 1, 25);
+    let swapText = '';
+
+    // Les 25 numéros doivent rester présents. Si l'ancien numéro n'existait qu'ici,
+    // on déplace une occurrence du numéro cible vers l'ancien numéro.
+    if (countPassageNumber(oldValue) === 1) {
+      const replacement = findPassageLocations(newValue, name, level)[0];
+      if (replacement) {
+        activeLayout.passages[replacement.name][replacement.level - 1] = oldValue;
+        swapText = ` · ${replacement.name}${replacement.level} devient ${oldValue}`;
+      }
+    }
+    activeLayout.passages[name][index] = newValue;
+    activeLayout = normalizeAndValidateLayout(activeLayout);
+    saveLayout();
+    rebuildLayoutStructures();
+    resetAllStatistics();
+    resetCurrentGame();
+    updateAccounting();
+    renderPassageEditor();
+    showLayoutMessage(`${name}${level} : ${oldValue} → ${newValue}${swapText}. Sauvegardé localement.`, 'success');
+  }
+
+  function renderPassageEditor() {
+    passageEditorEl.innerHTML = '';
+    corridorNames.forEach(name => {
+      const column = document.createElement('div');
+      column.className = 'passage-editor-column';
+      const title = document.createElement('div');
+      title.className = 'passage-editor-name';
+      title.textContent = name;
+      column.appendChild(title);
+      [1, 2].forEach(level => {
+        const value = activeLayout.passages[name][level - 1];
+        const levelLabel = document.createElement('div');
+        levelLabel.className = 'passage-level-label';
+        levelLabel.textContent = `${name}${level}`;
+        column.appendChild(levelLabel);
+        column.appendChild(createStepControl(value, delta => editPassageNumber(name, level, delta), `${name}${level}`));
+      });
+      passageEditorEl.appendChild(column);
+    });
+  }
+
+  function cardIsDirty(cardIndex = editingCardIndex) {
+    return JSON.stringify(draftCartons[cardIndex]) !== JSON.stringify(activeLayout.cartons[cardIndex]);
+  }
+
+  function editCardCell(cellIndex, delta) {
+    const flat = draftCartons[editingCardIndex].flat();
+    const oldValue = flat[cellIndex];
+    const newValue = rotateWrapped(oldValue, delta, 1, 25);
+    const otherIndex = flat.indexOf(newValue);
+    flat[cellIndex] = newValue;
+    if (otherIndex >= 0 && otherIndex !== cellIndex) flat[otherIndex] = oldValue;
+    draftCartons[editingCardIndex] = Array.from({ length: 5 }, (_, row) => flat.slice(row * 5, row * 5 + 5));
+    renderCardEditor();
+    showLayoutMessage(`Carton ${editingCardIndex + 1} modifié · non sauvegardé.`, 'pending');
+  }
+
+  function renderCardEditor() {
+    layoutCardTitleEl.textContent = `Carton ${editingCardIndex + 1}`;
+    cardEditorEl.innerHTML = '';
+    draftCartons[editingCardIndex].flat().forEach((number, cellIndex) => {
+      const cell = document.createElement('div');
+      cell.className = 'editable-card-cell';
+      cell.appendChild(createStepControl(number, delta => editCardCell(cellIndex, delta), `la case ${cellIndex + 1}`));
+      cardEditorEl.appendChild(cell);
+    });
+    if (cardIsDirty()) showLayoutMessage(`Carton ${editingCardIndex + 1} modifié · non sauvegardé.`, 'pending');
+  }
+
+  function changeEditingCard(delta) {
+    editingCardIndex = rotateWrapped(editingCardIndex + 1, delta, 1, 4) - 1;
+    renderCardEditor();
+    if (!cardIsDirty()) showLayoutMessage(`Carton ${editingCardIndex + 1}.`, '');
+  }
+
+  function saveEditedCard() {
+    const index = editingCardIndex;
+    activeLayout.cartons[index] = cloneLayout({ cartons: [draftCartons[index]] }).cartons[0];
+    activeLayout = normalizeAndValidateLayout(activeLayout);
+    saveLayout();
+    rebuildLayoutStructures();
+    resetAllStatistics();
+    resetCurrentGame();
+    updateAccounting();
+    renderCardEditor();
+    showLayoutMessage(`Carton ${index + 1} sauvegardé localement et appliqué. Comptabilité remise à zéro.`, 'success');
+  }
+
+  function restoreEditedCard() {
+    const index = editingCardIndex;
+    draftCartons[index] = cloneLayout({ cartons: [ORIGINAL_LAYOUT.cartons[index]] }).cartons[0];
+    activeLayout.cartons[index] = cloneLayout({ cartons: [ORIGINAL_LAYOUT.cartons[index]] }).cartons[0];
+    activeLayout = normalizeAndValidateLayout(activeLayout);
+    saveLayout();
+    rebuildLayoutStructures();
+    resetAllStatistics();
+    resetCurrentGame();
+    updateAccounting();
+    renderCardEditor();
+    showLayoutMessage(`Carton ${index + 1} restauré depuis cartons.js et sauvegardé localement. Comptabilité remise à zéro.`, 'success');
+  }
+
+  function renderLayoutEditors() {
+    // Recharge les brouillons non modifiés depuis la configuration active, sans écraser
+    // un carton que l'utilisateur est en train de préparer avant sauvegarde.
+    activeLayout.cartons.forEach((card, index) => {
+      if (!draftCartons[index] || JSON.stringify(draftCartons[index]) === JSON.stringify(activeLayout.cartons[index])) {
+        draftCartons[index] = cloneLayout({ cartons: [card] }).cartons[0];
+      }
+    });
+    renderPassageEditor();
+    renderCardEditor();
   }
 
   async function exportSettingsFile() {
@@ -1893,6 +2287,11 @@
   settingsBtn.addEventListener('click', openAccounting);
   tabAccountingBtn.addEventListener('click', () => switchModalPanel('accounting'));
   tabSettingsBtn.addEventListener('click', () => switchModalPanel('settings'));
+  tabLayoutBtn.addEventListener('click', () => switchModalPanel('layout'));
+  layoutPrevCardBtn.addEventListener('click', () => changeEditingCard(-1));
+  layoutNextCardBtn.addEventListener('click', () => changeEditingCard(+1));
+  layoutSaveCardBtn.addEventListener('click', saveEditedCard);
+  layoutRestoreCardBtn.addEventListener('click', restoreEditedCard);
   probModeDirectBtn.addEventListener('click', () => setProbabilityMode('direct'));
   probModeAssistedBtn.addEventListener('click', () => setProbabilityMode('assisted'));
   normalizeProbabilitiesBtn.addEventListener('click', () => {
@@ -1945,6 +2344,7 @@
 
   buildSettingsProbabilityInputs();
   settingsToForm(activeSettings);
+  renderLayoutEditors();
   updateConfiguredBallCount();
   renderCorridors();
   renderCards();
