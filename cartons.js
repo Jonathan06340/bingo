@@ -1,4 +1,4 @@
-// Configuration d origine V16 - valeurs chargees au premier demarrage ou apres restauration.
+// Configuration d origine V17 - valeurs chargees au premier demarrage ou apres restauration.
 // Les reglages modifies dans l interface sont conserves dans le localStorage du navigateur.
 // Ce fichier reste la reference pour le bouton RESTAURER ORIGINE.
 

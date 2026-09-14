@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Prototype Bingo - 14 couloirs - V16</title>
+<title>Prototype Bingo - 14 couloirs - V17</title>
 <style>
   :root {
     --bg: #f4f5f7;
@@ -723,7 +723,7 @@
   <section class="cards" id="cards"></section>
   <div class="history" id="history"><strong>Historique :</strong> —</div>
 </div>
-<div class="signature">Version 16 · By JT for PMGAMES</div>
+<div class="signature">Version 17 · By JT for PMGAMES</div>
 
 <div class="modal-backdrop" id="accountingBackdrop" role="dialog" aria-modal="true" aria-labelledby="accountingTitle">
   <div class="accounting-modal">
@@ -816,7 +816,7 @@
   </div>
 </div>
 
-<script src="cartons.js?v=16"></script>
+<script src="cartons.js?v=17"></script>
 <script>
 (() => {
   const STORAGE_KEY = 'jtPmgamesBingoSettingsV2';
@@ -1078,10 +1078,12 @@
     updateProbabilityTotal();
   }
 
-  // Mode ASSISTÉ V16 : comportement de "corde".
-  // Le couloir manipulé suit exactement la consigne. Les voisins proches suivent
-  // dans le même sens avec une influence décroissante, puis les couloirs éloignés
-  // compensent progressivement dans le sens opposé afin de conserver TOTAL = 1000.
+  // Mode ASSISTÉ V17 : comportement de "corde" sans butée artificielle.
+  // Le couloir manipulé peut aller de 0 à 1000. La déformation idéale entraîne
+  // d'abord les voisins dans le même sens et fait compenser les couloirs éloignés.
+  // Si cette déformation ferait passer certains couloirs sous 0, on ne bloque plus
+  // le curseur : on projette les autres couloirs sur la distribution réalisable
+  // la plus proche, avec TOTAL = 1000 et aucune valeur négative.
   const ROPE_DECAY = 2.2;
 
   function ropeCandidate(baseValues, changedIndex, selectedValue) {
@@ -1101,11 +1103,11 @@
       sumCounter += 1 - follow;
     }
 
-    if (sumCounter <= 0) return null;
-    const counterScale = delta * (1 + sumFollow) / sumCounter;
     const candidate = base.slice();
-    candidate[changedIndex] = base[changedIndex] + delta;
+    candidate[changedIndex] = Number(selectedValue);
+    if (sumCounter <= 0) return candidate;
 
+    const counterScale = delta * (1 + sumFollow) / sumCounter;
     for (let index = 0; index < base.length; index++) {
       if (index === changedIndex) continue;
       const follow = followFactors[index];
@@ -1115,45 +1117,55 @@
     return candidate;
   }
 
-  function ropeCandidateIsValid(candidate) {
-    return candidate && candidate.every(value => Number.isFinite(value) && value >= -1e-9 && value <= DISTRIBUTION_TOTAL + 1e-9);
+  // Projection euclidienne sur le simplex : valeurs >= 0 et somme imposée.
+  // C'est ce qui permet de continuer à tirer la "corde" même lorsqu'un couloir
+  // éloigné a déjà atteint 0, au lieu de bloquer tout le mouvement.
+  function projectOntoSimplex(values, targetSum) {
+    const y = values.map(value => Number.isFinite(Number(value)) ? Number(value) : 0);
+    const sum = Math.max(0, Number(targetSum));
+    if (sum <= 0) return y.map(() => 0);
+
+    const sorted = y.slice().sort((a, b) => b - a);
+    let cumulative = 0;
+    let rho = -1;
+    for (let i = 0; i < sorted.length; i++) {
+      cumulative += sorted[i];
+      const theta = (cumulative - sum) / (i + 1);
+      if (sorted[i] - theta > 0) rho = i;
+    }
+
+    if (rho < 0) return y.map(() => sum / y.length);
+    const theta = (sorted.slice(0, rho + 1).reduce((a, b) => a + b, 0) - sum) / (rho + 1);
+    return y.map(value => Math.max(value - theta, 0));
   }
 
-  function roundRopeDistribution(candidate, changedIndex, selectedValue) {
-    const result = Array(candidate.length).fill(0);
+  function roundDistributionWithFixedSelected(candidate, changedIndex, selectedValue) {
     const selected = clampInteger(selectedValue);
-    result[changedIndex] = selected;
-
     const targetOthers = DISTRIBUTION_TOTAL - selected;
-    const items = [];
-    let floorSum = 0;
+    const otherIndices = [];
+    const otherValues = [];
     for (let index = 0; index < candidate.length; index++) {
       if (index === changedIndex) continue;
-      const safe = Math.max(0, candidate[index]);
-      const floorValue = Math.floor(safe + 1e-10);
-      result[index] = floorValue;
+      otherIndices.push(index);
+      otherValues.push(candidate[index]);
+    }
+
+    const projected = projectOntoSimplex(otherValues, targetOthers);
+    const result = Array(candidate.length).fill(0);
+    result[changedIndex] = selected;
+
+    const items = [];
+    let floorSum = 0;
+    for (let i = 0; i < projected.length; i++) {
+      const floorValue = Math.floor(projected[i] + 1e-10);
+      result[otherIndices[i]] = floorValue;
       floorSum += floorValue;
-      items.push({ index, fraction: safe - floorValue });
+      items.push({ index: otherIndices[i], fraction: projected[i] - floorValue });
     }
 
     let missing = targetOthers - floorSum;
-    if (missing > 0) {
-      items.sort((a, b) => b.fraction - a.fraction || a.index - b.index);
-      for (let i = 0; i < missing; i++) result[items[i % items.length].index] += 1;
-    } else if (missing < 0) {
-      items.sort((a, b) => a.fraction - b.fraction || b.index - a.index);
-      let remaining = -missing;
-      let cursor = 0;
-      while (remaining > 0 && items.length) {
-        const index = items[cursor % items.length].index;
-        if (result[index] > 0) {
-          result[index] -= 1;
-          remaining -= 1;
-        }
-        cursor += 1;
-        if (cursor > items.length * (DISTRIBUTION_TOTAL + 1)) break;
-      }
-    }
+    items.sort((a, b) => b.fraction - a.fraction || a.index - b.index);
+    for (let i = 0; i < missing; i++) result[items[i % items.length].index] += 1;
     return result;
   }
 
@@ -1166,34 +1178,17 @@
     if (total !== DISTRIBUTION_TOTAL) base = normalizeWeightsTo1000(base);
 
     const requested = clampInteger(requestedValue);
-    const start = base[changedIndex];
-    if (requested === start) return base;
+    if (requested === base[changedIndex]) return base;
 
-    const direction = requested > start ? 1 : -1;
-    const requestedSteps = Math.abs(requested - start);
-
-    const buildForSteps = steps => {
-      const selected = start + direction * steps;
-      const candidate = ropeCandidate(base, changedIndex, selected);
-      return { selected, candidate };
-    };
-
-    // Si la consigne ferait passer un couloir sous 0, on limite proprement le mouvement
-    // au maximum physiquement représentable, tout en conservant la forme "corde".
-    let chosen = buildForSteps(requestedSteps);
-    if (!ropeCandidateIsValid(chosen.candidate)) {
-      let low = 0;
-      let high = requestedSteps;
-      while (low < high) {
-        const mid = Math.ceil((low + high) / 2);
-        const test = buildForSteps(mid);
-        if (ropeCandidateIsValid(test.candidate)) low = mid;
-        else high = mid - 1;
-      }
-      chosen = buildForSteps(low);
+    // Cas extrêmes explicites : un couloir peut réellement aller jusqu'à 0 ou 1000.
+    if (requested === DISTRIBUTION_TOTAL) {
+      const result = Array(base.length).fill(0);
+      result[changedIndex] = DISTRIBUTION_TOTAL;
+      return result;
     }
 
-    return roundRopeDistribution(chosen.candidate, changedIndex, chosen.selected);
+    const candidate = ropeCandidate(base, changedIndex, requested);
+    return roundDistributionWithFixedSelected(candidate, changedIndex, requested);
   }
 
   function applyProbabilityEdit(name, requestedValue, baseValues = null) {
