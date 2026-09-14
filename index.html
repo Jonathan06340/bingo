@@ -880,7 +880,7 @@
   <section class="cards" id="cards"></section>
   <div class="history" id="history"><strong>Historique :</strong> —</div>
 </div>
-<div class="signature">Version 19 · By JT for PMGAMES</div>
+<div class="signature">Version 20 · By JT for PMGAMES</div>
 
 <div class="modal-backdrop" id="accountingBackdrop" role="dialog" aria-modal="true" aria-labelledby="accountingTitle">
   <div class="accounting-modal">
@@ -1003,7 +1003,7 @@
   </div>
 </div>
 
-<script src="cartons.js?v=19"></script>
+<script src="cartons.js?v=20"></script>
 <script>
 (() => {
   const STORAGE_KEY = 'jtPmgamesBingoSettingsV2';
@@ -1688,17 +1688,21 @@
 
   function editPassageNumber(name, level, delta) {
     const index = level - 1;
-    const oldValue = activeLayout.passages[name][index];
-    const newValue = rotateWrapped(oldValue, delta, 1, 25);
+    const previousValue = activeLayout.passages[name][index];
+    const newValue = rotateWrapped(previousValue, delta, 1, 25);
+    const initialValue = ORIGINAL_LAYOUT.passages[name][index];
     let swapText = '';
 
     // Les 25 numéros doivent rester présents. Si l'ancien numéro n'existait qu'ici,
     // on déplace une occurrence du numéro cible vers l'ancien numéro.
-    if (countPassageNumber(oldValue) === 1) {
+    if (countPassageNumber(previousValue) === 1) {
       const replacement = findPassageLocations(newValue, name, level)[0];
       if (replacement) {
-        activeLayout.passages[replacement.name][replacement.level - 1] = oldValue;
-        swapText = ` · ${replacement.name}${replacement.level} devient ${oldValue}`;
+        const replacementIndex = replacement.level - 1;
+        activeLayout.passages[replacement.name][replacementIndex] = previousValue;
+        const replacementInitial = ORIGINAL_LAYOUT.passages[replacement.name][replacementIndex];
+        const replacementCurrent = activeLayout.passages[replacement.name][replacementIndex];
+        swapText = ` · ${replacement.name}${replacement.level} : ${replacementInitial} → ${replacementCurrent}`;
       }
     }
     activeLayout.passages[name][index] = newValue;
@@ -1709,7 +1713,7 @@
     resetCurrentGame();
     updateAccounting();
     renderPassageEditor();
-    showLayoutMessage(`${name}${level} : ${oldValue} → ${newValue}${swapText}. Sauvegardé localement.`, 'success');
+    showLayoutMessage(`${name}${level} : ${initialValue} → ${activeLayout.passages[name][index]}${swapText}. Sauvegardé localement.`, 'success');
   }
 
   function renderPassageEditor() {
@@ -1739,14 +1743,24 @@
 
   function editCardCell(cellIndex, delta) {
     const flat = draftCartons[editingCardIndex].flat();
-    const oldValue = flat[cellIndex];
-    const newValue = rotateWrapped(oldValue, delta, 1, 25);
+    const previousValue = flat[cellIndex];
+    const newValue = rotateWrapped(previousValue, delta, 1, 25);
     const otherIndex = flat.indexOf(newValue);
     flat[cellIndex] = newValue;
-    if (otherIndex >= 0 && otherIndex !== cellIndex) flat[otherIndex] = oldValue;
+    if (otherIndex >= 0 && otherIndex !== cellIndex) flat[otherIndex] = previousValue;
     draftCartons[editingCardIndex] = Array.from({ length: 5 }, (_, row) => flat.slice(row * 5, row * 5 + 5));
     renderCardEditor();
-    showLayoutMessage(`Carton ${editingCardIndex + 1} modifié · non sauvegardé.`, 'pending');
+
+    const originalFlat = ORIGINAL_LAYOUT.cartons[editingCardIndex].flat();
+    const initialValue = originalFlat[cellIndex];
+    const currentValue = draftCartons[editingCardIndex].flat()[cellIndex];
+    let swapText = '';
+    if (otherIndex >= 0 && otherIndex !== cellIndex) {
+      const otherInitial = originalFlat[otherIndex];
+      const otherCurrent = draftCartons[editingCardIndex].flat()[otherIndex];
+      swapText = ` · case ${otherIndex + 1} : ${otherInitial} → ${otherCurrent}`;
+    }
+    showLayoutMessage(`Carton ${editingCardIndex + 1} · case ${cellIndex + 1} : ${initialValue} → ${currentValue}${swapText} · non sauvegardé.`, 'pending');
   }
 
   function renderCardEditor() {

@@ -1,4 +1,4 @@
-// Configuration d origine V19 - valeurs chargees au premier demarrage ou apres restauration.
+// Configuration d origine V20 - valeurs chargees au premier demarrage ou apres restauration.
 // Les reglages, numeros de passages et cartons modifies dans l interface sont conserves dans le localStorage du navigateur.
 // Ce fichier reste la reference pour le bouton RESTAURER ORIGINE.
 
