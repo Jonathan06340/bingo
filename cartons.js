@@ -1,4 +1,4 @@
-// Configuration d origine V14 - valeurs chargees au premier demarrage ou apres restauration.
+// Configuration d origine V15 - valeurs chargees au premier demarrage ou apres restauration.
 // Les reglages modifies dans l interface sont conserves dans le localStorage du navigateur.
 // Ce fichier reste la reference pour le bouton RESTAURER ORIGINE.
 
@@ -13,21 +13,23 @@ window.PAYTABLE = {
   line5: 10.0
 };
 
-window.CORRIDOR_PROBABILITIES = {
-  A: 0.9,
-  B: 1.8,
-  C: 3.6,
-  D: 6.3,
-  E: 8.9,
-  F: 12.5,
-  G: 16.0,
-  H: 16.0,
-  I: 12.5,
-  J: 8.9,
-  K: 6.3,
-  L: 3.6,
-  M: 1.8,
-  N: 0.9
+// Distribution des 14 couloirs en points entiers. Total de reference = 1000.
+// 1 point = 0,1 % lorsque le total vaut exactement 1000.
+window.CORRIDOR_WEIGHTS = {
+  A: 9,
+  B: 18,
+  C: 36,
+  D: 63,
+  E: 89,
+  F: 125,
+  G: 160,
+  H: 160,
+  I: 125,
+  J: 89,
+  K: 63,
+  L: 36,
+  M: 18,
+  N: 9
 };
 
 // 28 passages physiques pour 25 numeros, melanges visuellement.

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Prototype Bingo - 14 couloirs - V14</title>
+<title>Prototype Bingo - 14 couloirs - V15</title>
 <style>
   :root {
     --bg: #f4f5f7;
@@ -234,7 +234,9 @@
   .modal-backdrop.open { display: flex; }
 
   .accounting-modal {
-    width: min(700px, 96vw);
+    width: min(980px, 97vw);
+    max-height: calc(100dvh - 36px);
+    overflow-y: auto;
     background: white;
     border: 2px solid var(--border);
     border-radius: 12px;
@@ -474,10 +476,6 @@
     gap: 7px;
   }
 
-  .settings-grid.probabilities {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-  }
-
   .setting-field {
     display: grid;
     gap: 3px;
@@ -502,13 +500,140 @@
     font-weight: 750;
   }
 
-  .probability-total {
-    margin-top: 7px;
+  .probability-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .probability-mode {
+    display: inline-grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 3px;
+    border: 1px solid #c9ced5;
+    border-radius: 8px;
+    background: #edf0f4;
+  }
+
+  .probability-mode button {
+    min-height: 32px;
+    padding: 0 15px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #3e4650;
     font-size: 12px;
-    font-weight: 850;
+    font-weight: 900;
+  }
+
+  .probability-mode button.active {
+    color: #fff;
+    background: #3e4650;
+  }
+
+  .probability-help {
+    flex: 1 1 320px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  .probability-eq-wrap {
+    overflow-x: auto;
+    padding: 6px 2px 2px;
+  }
+
+  .probability-eq {
+    min-width: 790px;
+    display: grid;
+    grid-template-columns: repeat(14, minmax(48px, 1fr));
+    gap: 7px;
+    align-items: end;
+  }
+
+  .fader-column {
+    min-width: 0;
+    display: grid;
+    grid-template-rows: auto 170px auto auto;
+    justify-items: center;
+    gap: 4px;
+    padding: 5px 2px;
+    border-radius: 7px;
+    background: linear-gradient(#f8f9fb, #eef1f4);
+    border: 1px solid #d4d9df;
+  }
+
+  .fader-label {
+    font-size: 12px;
+    font-weight: 950;
+    color: #343a40;
+  }
+
+  .fader-rail {
+    width: 34px;
+    height: 170px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .fader-slider {
+    width: 160px;
+    height: 24px;
+    margin: 0;
+    transform: rotate(-90deg);
+    accent-color: #1f6feb;
+    cursor: ns-resize;
+  }
+
+  .fader-number {
+    width: 48px;
+    height: 30px;
+    padding: 2px 3px;
+    border: 1.5px solid #8f98a3;
+    border-radius: 5px;
+    background: #fff;
+    color: var(--ink);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 900;
+    text-align: center;
+  }
+
+  .fader-percent {
+    min-height: 15px;
+    color: #66707a;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .probability-footer {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .probability-total {
+    font-size: 13px;
+    font-weight: 900;
   }
   .probability-total.ok { color: #17803d; }
   .probability-total.bad { color: #b42318; }
+
+  #normalizeProbabilitiesBtn {
+    min-height: 34px;
+    padding: 0 11px;
+    background: #6c757d;
+    font-size: 11px;
+  }
 
   .settings-actions {
     display: grid;
@@ -549,7 +674,7 @@
     .card-panel { min-height: 220px; }
     .corridors { min-width: 820px; }
     .panel { overflow-x: auto; }
-    .settings-grid, .settings-grid.probabilities { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .settings-actions { grid-template-columns: 1fr 1fr; }
   }
 </style>
@@ -598,7 +723,7 @@
   <section class="cards" id="cards"></section>
   <div class="history" id="history"><strong>Historique :</strong> —</div>
 </div>
-<div class="signature">By JT for PMGAMES</div>
+<div class="signature">Version 15 · By JT for PMGAMES</div>
 
 <div class="modal-backdrop" id="accountingBackdrop" role="dialog" aria-modal="true" aria-labelledby="accountingTitle">
   <div class="accounting-modal">
@@ -660,9 +785,21 @@
         </div>
 
         <div class="settings-section">
-          <h3>Probabilité des 14 couloirs (%)</h3>
-          <div class="settings-grid probabilities" id="probabilitySettings"></div>
-          <div class="probability-total" id="probabilityTotal">Total : 100,00 %</div>
+          <h3>Distribution des 14 couloirs · 1000 points = 100 %</h3>
+          <div class="probability-toolbar">
+            <div class="probability-mode" aria-label="Mode de réglage des couloirs">
+              <button id="probModeDirectBtn" class="active" type="button">DIRECT</button>
+              <button id="probModeAssistedBtn" type="button">ASSISTÉ</button>
+            </div>
+            <div class="probability-help" id="probabilityHelp">DIRECT : chaque valeur est indépendante. Le total peut s'écarter de 1000 ; l'écart est signalé et aucune autre valeur n'est modifiée.</div>
+          </div>
+          <div class="probability-eq-wrap">
+            <div class="probability-eq" id="probabilitySettings"></div>
+          </div>
+          <div class="probability-footer">
+            <div class="probability-total" id="probabilityTotal">TOTAL : 1000 / 1000</div>
+            <button id="normalizeProbabilitiesBtn" type="button">NORMALISER À 1000</button>
+          </div>
         </div>
 
         <div class="settings-actions">
@@ -673,24 +810,27 @@
         </div>
         <input id="settingsImportInput" type="file" accept="application/json,.json" hidden>
         <div class="settings-message" id="settingsMessage"></div>
-        <div class="settings-note">Sauvegarde locale = uniquement dans ce navigateur. Export/Import permet de transférer les mêmes réglages sur un autre poste. Restaurer origine efface la sauvegarde locale et reprend les valeurs de <strong>cartons.js</strong>.</div>
+        <div class="settings-note">Sauvegarde locale = uniquement dans ce navigateur. Export/Import permet de transférer les mêmes réglages sur un autre poste. Restaurer origine efface la sauvegarde locale et reprend les valeurs de <strong>cartons.js</strong>. Les couloirs utilisent des poids entiers ; si le total DIRECT diffère de 1000, le tirage conserve leurs proportions relatives sans modifier les valeurs saisies.</div>
       </div>
     </div>
   </div>
 </div>
 
-<script src="cartons.js"></script>
+<script src="cartons.js?v=15"></script>
 <script>
 (() => {
-  const STORAGE_KEY = 'jtPmgamesBingoSettingsV1';
+  const STORAGE_KEY = 'jtPmgamesBingoSettingsV2';
+  const LEGACY_STORAGE_KEY = 'jtPmgamesBingoSettingsV1';
+  const SETTINGS_VERSION = 2;
+  const DISTRIBUTION_TOTAL = 1000;
   const corridorNames = Array.from({ length: 14 }, (_, i) => String.fromCharCode(65 + i));
 
-  if (!window.GAME_CONFIG || !window.PAYTABLE || !window.CORRIDOR_PROBABILITIES) {
-    throw new Error('cartons.js doit definir GAME_CONFIG, PAYTABLE et CORRIDOR_PROBABILITIES.');
+  if (!window.GAME_CONFIG || !window.PAYTABLE || !window.CORRIDOR_WEIGHTS) {
+    throw new Error('cartons.js doit definir GAME_CONFIG, PAYTABLE et CORRIDOR_WEIGHTS.');
   }
 
   const DEFAULT_SETTINGS = {
-    version: 1,
+    version: SETTINGS_VERSION,
     ballsPerGame: Number(window.GAME_CONFIG.ballsPerGame),
     paytable: {
       stake: Number(window.PAYTABLE.stake),
@@ -698,12 +838,30 @@
       line4: Number(window.PAYTABLE.line4),
       line5: Number(window.PAYTABLE.line5)
     },
-    corridorProbabilities: Object.fromEntries(
-      corridorNames.map(name => [name, Number(window.CORRIDOR_PROBABILITIES[name])])
+    probabilityMode: 'direct',
+    corridorWeights: Object.fromEntries(
+      corridorNames.map(name => [name, Number(window.CORRIDOR_WEIGHTS[name])])
     )
   };
 
-  function normalizeAndValidateSettings(raw) {
+  function convertLegacySettings(raw) {
+    if (!raw || typeof raw !== 'object') return raw;
+    if (raw.corridorWeights) return raw;
+    if (!raw.corridorProbabilities) return raw;
+    const corridorWeights = {};
+    corridorNames.forEach(name => {
+      corridorWeights[name] = Math.max(0, Math.round(Number(raw.corridorProbabilities[name] || 0) * 10));
+    });
+    return {
+      ...raw,
+      version: SETTINGS_VERSION,
+      probabilityMode: raw.probabilityMode === 'assisted' ? 'assisted' : 'direct',
+      corridorWeights
+    };
+  }
+
+  function normalizeAndValidateSettings(inputRaw) {
+    const raw = convertLegacySettings(inputRaw);
     if (!raw || typeof raw !== 'object') throw new Error('Fichier de réglages invalide.');
 
     const ballsPerGame = Number(raw.ballsPerGame);
@@ -722,30 +880,36 @@
       throw new Error('La paytable contient une valeur invalide.');
     }
 
-    const rawProbabilities = raw.corridorProbabilities || {};
-    const corridorProbabilities = {};
+    const rawWeights = raw.corridorWeights || {};
+    const corridorWeights = {};
     for (const name of corridorNames) {
-      const value = Number(rawProbabilities[name]);
-      if (!Number.isFinite(value) || value < 0) {
-        throw new Error(`Probabilité invalide pour le couloir ${name}.`);
+      const value = Number(rawWeights[name]);
+      if (!Number.isInteger(value) || value < 0 || value > DISTRIBUTION_TOTAL) {
+        throw new Error(`Poids invalide pour le couloir ${name} : entier attendu entre 0 et ${DISTRIBUTION_TOTAL}.`);
       }
-      corridorProbabilities[name] = value;
+      corridorWeights[name] = value;
     }
-    const total = Object.values(corridorProbabilities).reduce((a, b) => a + b, 0);
-    if (Math.abs(total - 100) > 0.001) {
-      throw new Error(`Les probabilités doivent totaliser 100 % (actuellement ${total.toFixed(3)} %).`);
-    }
+    const total = Object.values(corridorWeights).reduce((a, b) => a + b, 0);
+    if (total <= 0) throw new Error('La distribution des couloirs ne peut pas être entièrement nulle.');
 
-    return { version: 1, ballsPerGame, paytable, corridorProbabilities };
+    const probabilityMode = raw.probabilityMode === 'assisted' ? 'assisted' : 'direct';
+    return { version: SETTINGS_VERSION, ballsPerGame, paytable, probabilityMode, corridorWeights };
   }
 
   const ORIGINAL_SETTINGS = normalizeAndValidateSettings(DEFAULT_SETTINGS);
 
   function readLocalSettings() {
     try {
-      const text = localStorage.getItem(STORAGE_KEY);
-      if (!text) return null;
-      return normalizeAndValidateSettings(JSON.parse(text));
+      const current = localStorage.getItem(STORAGE_KEY);
+      if (current) return normalizeAndValidateSettings(JSON.parse(current));
+
+      const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (legacy) {
+        const migrated = normalizeAndValidateSettings(JSON.parse(legacy));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+        return migrated;
+      }
+      return null;
     } catch (error) {
       console.warn('Réglages locaux ignorés :', error);
       try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
@@ -757,7 +921,8 @@
   let activeSettings = readLocalSettings() || cloneSettings(ORIGINAL_SETTINGS);
   let MAX_BALLS = activeSettings.ballsPerGame;
   let PAYTABLE = { ...activeSettings.paytable };
-  let corridorWeights = corridorNames.map(name => activeSettings.corridorProbabilities[name]);
+  let corridorWeights = corridorNames.map(name => activeSettings.corridorWeights[name]);
+  let probabilityMode = activeSettings.probabilityMode || 'direct';
 
   // Validation et chargement du mapping A..N depuis cartons.js.
   if (!window.PASSAGES || typeof window.PASSAGES !== 'object') {
@@ -880,6 +1045,10 @@
   const setLine5El = document.getElementById('setLine5');
   const probabilitySettingsEl = document.getElementById('probabilitySettings');
   const probabilityTotalEl = document.getElementById('probabilityTotal');
+  const probabilityHelpEl = document.getElementById('probabilityHelp');
+  const probModeDirectBtn = document.getElementById('probModeDirectBtn');
+  const probModeAssistedBtn = document.getElementById('probModeAssistedBtn');
+  const normalizeProbabilitiesBtn = document.getElementById('normalizeProbabilitiesBtn');
   const settingsApplyBtn = document.getElementById('settingsApplyBtn');
   const settingsRestoreBtn = document.getElementById('settingsRestoreBtn');
   const settingsExportBtn = document.getElementById('settingsExportBtn');
@@ -887,26 +1056,150 @@
   const settingsImportInput = document.getElementById('settingsImportInput');
   const settingsMessageEl = document.getElementById('settingsMessage');
   const probabilityInputs = {};
+  const probabilitySliders = {};
+  const probabilityPercentLabels = {};
 
+  function clampInteger(value, min = 0, max = DISTRIBUTION_TOTAL) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return min;
+    return Math.max(min, Math.min(max, Math.round(number)));
+  }
+
+  function getFormWeights() {
+    return corridorNames.map(name => clampInteger(probabilityInputs[name]?.value || 0));
+  }
+
+  function setFormWeights(values) {
+    corridorNames.forEach((name, index) => {
+      const value = clampInteger(values[index]);
+      probabilityInputs[name].value = value;
+      probabilitySliders[name].value = value;
+    });
+    updateProbabilityTotal();
+  }
+
+  function assistedWeightsForChange(values, changedIndex, requestedValue) {
+    const result = values.map(value => clampInteger(value));
+    result[changedIndex] = clampInteger(requestedValue);
+
+    const sumOthers = result.reduce((sum, value, index) => index === changedIndex ? sum : sum + value, 0);
+    const targetOthers = DISTRIBUTION_TOTAL - result[changedIndex];
+    let difference = targetOthers - sumOthers;
+    if (difference === 0) return result;
+
+    const add = difference > 0;
+    let amount = Math.abs(difference);
+    const allocated = Array(result.length).fill(0);
+    const influence = index => {
+      const distance = Math.abs(index - changedIndex);
+      return distance === 0 ? 0 : 1 / distance;
+    };
+
+    while (amount > 0) {
+      let bestIndex = -1;
+      let bestScore = -1;
+      for (let index = 0; index < result.length; index++) {
+        if (index === changedIndex) continue;
+        const capacity = add ? DISTRIBUTION_TOTAL - result[index] : result[index];
+        if (capacity <= 0) continue;
+        const score = influence(index) / (allocated[index] + 1);
+        if (score > bestScore + 1e-12) {
+          bestScore = score;
+          bestIndex = index;
+        }
+      }
+      if (bestIndex < 0) break;
+      result[bestIndex] += add ? 1 : -1;
+      allocated[bestIndex] += 1;
+      amount -= 1;
+    }
+    return result;
+  }
+
+  function applyProbabilityEdit(name, requestedValue) {
+    const changedIndex = corridorNames.indexOf(name);
+    if (changedIndex < 0) return;
+    const values = getFormWeights();
+    const requested = clampInteger(requestedValue);
+    if (probabilityMode === 'assisted') {
+      setFormWeights(assistedWeightsForChange(values, changedIndex, requested));
+    } else {
+      values[changedIndex] = requested;
+      setFormWeights(values);
+    }
+  }
 
   function buildSettingsProbabilityInputs() {
     probabilitySettingsEl.innerHTML = '';
     corridorNames.forEach(name => {
-      const wrap = document.createElement('div');
-      wrap.className = 'setting-field';
-      const label = document.createElement('label');
-      label.htmlFor = `setProb${name}`;
+      const column = document.createElement('div');
+      column.className = 'fader-column';
+
+      const label = document.createElement('div');
+      label.className = 'fader-label';
       label.textContent = name;
+
+      const rail = document.createElement('div');
+      rail.className = 'fader-rail';
+      const slider = document.createElement('input');
+      slider.className = 'fader-slider';
+      slider.id = `setProbSlider${name}`;
+      slider.type = 'range';
+      slider.min = '0';
+      slider.max = String(DISTRIBUTION_TOTAL);
+      slider.step = '1';
+      slider.addEventListener('input', () => applyProbabilityEdit(name, slider.value));
+      rail.appendChild(slider);
+
       const input = document.createElement('input');
+      input.className = 'fader-number';
       input.id = `setProb${name}`;
       input.type = 'number';
       input.min = '0';
-      input.step = '0.01';
-      input.addEventListener('input', updateProbabilityTotal);
-      wrap.append(label, input);
-      probabilitySettingsEl.appendChild(wrap);
+      input.max = String(DISTRIBUTION_TOTAL);
+      input.step = '1';
+      input.inputMode = 'numeric';
+      input.addEventListener('input', () => {
+        if (probabilityMode === 'direct') {
+          if (input.value !== '') probabilitySliders[name].value = clampInteger(input.value);
+          updateProbabilityTotal();
+        }
+      });
+      input.addEventListener('change', () => applyProbabilityEdit(name, input.value));
+
+      const percent = document.createElement('div');
+      percent.className = 'fader-percent';
+      percent.textContent = '0,0 %';
+
+      column.append(label, rail, input, percent);
+      probabilitySettingsEl.appendChild(column);
       probabilityInputs[name] = input;
+      probabilitySliders[name] = slider;
+      probabilityPercentLabels[name] = percent;
     });
+  }
+
+  function setProbabilityMode(mode, { keepValues = true } = {}) {
+    probabilityMode = mode === 'assisted' ? 'assisted' : 'direct';
+    probModeDirectBtn.classList.toggle('active', probabilityMode === 'direct');
+    probModeAssistedBtn.classList.toggle('active', probabilityMode === 'assisted');
+    probabilityHelpEl.textContent = probabilityMode === 'direct'
+      ? "DIRECT : chaque valeur est indépendante. Le total peut s'écarter de 1000 ; l'écart est signalé et aucune autre valeur n'est modifiée."
+      : "ASSISTÉ : toute modification ramène le total à 1000. Les couloirs adjacents compensent davantage que les couloirs éloignés.";
+    if (!keepValues) updateProbabilityTotal();
+  }
+
+  function normalizeWeightsTo1000(values) {
+    const source = values.map(value => Math.max(0, clampInteger(value)));
+    const total = source.reduce((a, b) => a + b, 0);
+    if (total <= 0) throw new Error('Impossible de normaliser une distribution entièrement nulle.');
+    const exact = source.map(value => value * DISTRIBUTION_TOTAL / total);
+    const result = exact.map(Math.floor);
+    let missing = DISTRIBUTION_TOTAL - result.reduce((a, b) => a + b, 0);
+    const order = exact.map((value, index) => ({ index, fraction: value - Math.floor(value) }))
+      .sort((a, b) => b.fraction - a.fraction || a.index - b.index);
+    for (let i = 0; i < missing; i++) result[order[i % order.length].index] += 1;
+    return result;
   }
 
   function settingsToForm(settings = activeSettings) {
@@ -915,15 +1208,15 @@
     setLine3El.value = settings.paytable.line3;
     setLine4El.value = settings.paytable.line4;
     setLine5El.value = settings.paytable.line5;
-    corridorNames.forEach(name => { probabilityInputs[name].value = settings.corridorProbabilities[name]; });
-    updateProbabilityTotal();
+    setProbabilityMode(settings.probabilityMode || 'direct');
+    setFormWeights(corridorNames.map(name => settings.corridorWeights[name]));
   }
 
   function settingsFromForm() {
-    const corridorProbabilities = {};
-    corridorNames.forEach(name => { corridorProbabilities[name] = Number(probabilityInputs[name].value); });
+    const corridorWeights = {};
+    corridorNames.forEach(name => { corridorWeights[name] = clampInteger(probabilityInputs[name].value); });
     return normalizeAndValidateSettings({
-      version: 1,
+      version: SETTINGS_VERSION,
       ballsPerGame: Number(setBallsEl.value),
       paytable: {
         stake: Number(setStakeEl.value),
@@ -931,16 +1224,24 @@
         line4: Number(setLine4El.value),
         line5: Number(setLine5El.value)
       },
-      corridorProbabilities
+      probabilityMode,
+      corridorWeights
     });
   }
 
   function updateProbabilityTotal() {
-    const values = corridorNames.map(name => Number(probabilityInputs[name]?.value || 0));
+    const values = getFormWeights();
     const total = values.reduce((a, b) => a + b, 0);
-    probabilityTotalEl.textContent = `Total : ${total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 3 })} %`;
-    probabilityTotalEl.classList.toggle('ok', Math.abs(total - 100) <= 0.001);
-    probabilityTotalEl.classList.toggle('bad', Math.abs(total - 100) > 0.001);
+    corridorNames.forEach((name, index) => {
+      const actualPercent = total > 0 ? (values[index] / total) * 100 : 0;
+      probabilityPercentLabels[name].textContent = `${actualPercent.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`;
+    });
+    const delta = total - DISTRIBUTION_TOTAL;
+    const percent = total / 10;
+    const deltaText = delta === 0 ? 'OK' : `écart ${delta > 0 ? '+' : ''}${delta}`;
+    probabilityTotalEl.textContent = `TOTAL : ${total} / ${DISTRIBUTION_TOTAL} · ${percent.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} % · ${deltaText}`;
+    probabilityTotalEl.classList.toggle('ok', total === DISTRIBUTION_TOTAL);
+    probabilityTotalEl.classList.toggle('bad', total !== DISTRIBUTION_TOTAL);
   }
 
   function showSettingsMessage(text, kind = '') {
@@ -965,7 +1266,7 @@
     activeSettings = cloneSettings(normalized);
     MAX_BALLS = activeSettings.ballsPerGame;
     PAYTABLE = { ...activeSettings.paytable };
-    corridorWeights = corridorNames.map(name => activeSettings.corridorProbabilities[name]);
+    corridorWeights = corridorNames.map(name => activeSettings.corridorWeights[name]);
 
     if (persist) localStorage.setItem(STORAGE_KEY, JSON.stringify(activeSettings));
 
@@ -1468,6 +1769,16 @@
   settingsBtn.addEventListener('click', openAccounting);
   tabAccountingBtn.addEventListener('click', () => switchModalPanel('accounting'));
   tabSettingsBtn.addEventListener('click', () => switchModalPanel('settings'));
+  probModeDirectBtn.addEventListener('click', () => setProbabilityMode('direct'));
+  probModeAssistedBtn.addEventListener('click', () => setProbabilityMode('assisted'));
+  normalizeProbabilitiesBtn.addEventListener('click', () => {
+    try {
+      setFormWeights(normalizeWeightsTo1000(getFormWeights()));
+      showSettingsMessage('Distribution normalisée à 1000 points.', 'success');
+    } catch (error) {
+      showSettingsMessage(error.message || 'Normalisation impossible.', 'error');
+    }
+  });
 
   settingsApplyBtn.addEventListener('click', () => {
     try {
@@ -1481,6 +1792,7 @@
   settingsRestoreBtn.addEventListener('click', () => {
     try {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
       applyRuntimeSettings(ORIGINAL_SETTINGS, { persist: false, message: 'Réglages d’origine restaurés depuis cartons.js. Statistiques remises à zéro.' });
     } catch (error) {
       showSettingsMessage(error.message || 'Restauration impossible.', 'error');
