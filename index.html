@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Prototype Bingo - 14 couloirs - V18</title>
+<title>Prototype Bingo - 14 couloirs - V22</title>
 <style>
   :root {
     --bg: #f4f5f7;
@@ -234,7 +234,7 @@
   .modal-backdrop.open { display: flex; }
 
   .accounting-modal {
-    width: min(980px, 97vw);
+    width: min(1280px, 97vw);
     max-height: calc(100dvh - 36px);
     overflow-y: auto;
     background: white;
@@ -683,9 +683,9 @@
 
   .passage-editor-grid {
     display: grid;
-    grid-template-columns: repeat(14, minmax(58px, 1fr));
+    grid-template-columns: repeat(14, minmax(76px, 1fr));
     gap: 5px;
-    min-width: 860px;
+    min-width: 1130px;
   }
 
   .passage-editor-wrap { overflow-x: auto; padding-bottom: 3px; }
@@ -693,6 +693,7 @@
   .passage-editor-column {
     display: grid;
     gap: 3px;
+    min-width: 76px;
     text-align: center;
   }
 
@@ -711,7 +712,9 @@
 
   .step-control {
     display: grid;
-    grid-template-columns: 22px minmax(28px, 1fr) 22px;
+    grid-template-columns: 24px minmax(28px, 1fr) 24px;
+    width: 100%;
+    min-width: 76px;
     height: 34px;
     border: 1px solid #c8cdd3;
     border-radius: 7px;
@@ -749,7 +752,7 @@
 
   .card-editor-toolbar {
     display: grid;
-    grid-template-columns: 38px minmax(110px, 150px) 38px auto auto;
+    grid-template-columns: 38px minmax(110px, 150px) 38px repeat(4, auto);
     align-items: center;
     justify-content: center;
     gap: 8px;
@@ -759,6 +762,14 @@
   .card-editor-toolbar button {
     min-height: 34px;
     padding: 0 10px;
+  }
+
+  #layoutPrevCardBtn, #layoutNextCardBtn {
+    padding: 0;
+    border: 1px solid #c8cdd3;
+    background: #e9edf2;
+    color: #222;
+    font-size: 17px;
   }
 
   .card-editor-title {
@@ -794,6 +805,8 @@
 
   #layoutSaveCardBtn { background: #218838; }
   #layoutRestoreCardBtn { background: #c73a3a; }
+  #layoutExportBtn { background: #1f6feb; }
+  #layoutImportBtn { background: #6f42c1; }
 
   .layout-message {
     min-height: 18px;
@@ -818,7 +831,7 @@
     .card-editor-toolbar {
       grid-template-columns: 38px minmax(100px, 1fr) 38px;
     }
-    #layoutSaveCardBtn, #layoutRestoreCardBtn { grid-column: span 1; }
+    #layoutSaveCardBtn, #layoutRestoreCardBtn, #layoutImportBtn, #layoutExportBtn { grid-column: span 1; }
   }
 
   @media (max-width: 900px) {
@@ -882,7 +895,7 @@
   <section class="cards" id="cards"></section>
   <div class="history" id="history"><strong>Historique :</strong> —</div>
 </div>
-<div class="signature">Version 21 · By JT for PMGAMES</div>
+<div class="signature">Version 22 · By JT for PMGAMES</div>
 
 <div class="modal-backdrop" id="accountingBackdrop" role="dialog" aria-modal="true" aria-labelledby="accountingTitle">
   <div class="accounting-modal">
@@ -982,7 +995,7 @@
           <div class="passage-editor-wrap">
             <div class="passage-editor-grid" id="passageEditor"></div>
           </div>
-          <div class="layout-note">◀ / ▶ modifie chaque numéro avec rotation aux limites : 25 → 1 et 1 → 25. Les modifications des couloirs sont appliquées et sauvegardées localement immédiatement.</div>
+          <div class="layout-note">◀ / ▶ modifie chaque numéro avec rotation aux limites : 25 → 1 et 1 → 25. Les modifications restent en préparation jusqu’à SAUVEGARDER.</div>
         </div>
 
         <div class="layout-section">
@@ -993,17 +1006,20 @@
             <button id="layoutNextCardBtn" type="button" title="Carton suivant">▶</button>
             <button id="layoutSaveCardBtn" type="button">SAUVEGARDER</button>
             <button id="layoutRestoreCardBtn" type="button">RESTAURER</button>
+            <button id="layoutImportBtn" type="button">IMPORTER</button>
+            <button id="layoutExportBtn" type="button">EXPORTER</button>
           </div>
+          <input id="layoutImportInput" type="file" accept="application/json,.json" hidden>
           <div class="editable-card-grid" id="cardEditor"></div>
           <div class="layout-message" id="layoutMessage"></div>
-          <div class="layout-note">◀ / ▶ fait tourner les valeurs 1…25. Pour garder un carton valide, le numéro demandé est échangé automatiquement avec celui déjà présent. La sélection des cartons tourne aussi aux limites : 1 ↔ 4.</div>
+          <div class="layout-note">Les 4 boutons portent toujours sur l’ensemble : 28 passages + 4 cartons. ◀ / ▶ fait tourner les valeurs 1…25, et la sélection des cartons tourne aux limites : 1 ↔ 4.</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<script src="cartons.js?v=21"></script>
+<script src="cartons.js?v=22"></script>
 <script>
 (() => {
   const STORAGE_KEY = 'jtPmgamesBingoSettingsV2';
@@ -1286,6 +1302,9 @@
   const layoutNextCardBtn = document.getElementById('layoutNextCardBtn');
   const layoutSaveCardBtn = document.getElementById('layoutSaveCardBtn');
   const layoutRestoreCardBtn = document.getElementById('layoutRestoreCardBtn');
+  const layoutImportBtn = document.getElementById('layoutImportBtn');
+  const layoutExportBtn = document.getElementById('layoutExportBtn');
+  const layoutImportInput = document.getElementById('layoutImportInput');
   const layoutMessageEl = document.getElementById('layoutMessage');
   const setBallsEl = document.getElementById('setBalls');
   const setStakeEl = document.getElementById('setStake');
@@ -1649,7 +1668,7 @@
   }
 
   let editingCardIndex = 0;
-  let draftCartons = cloneLayout(activeLayout).cartons;
+  let draftLayout = cloneLayout(activeLayout);
 
   function createStepControl(value, onStep, label) {
     const control = document.createElement('div');
@@ -1673,7 +1692,7 @@
 
   function findPassageLocations(number, excludeName = null, excludeLevel = null) {
     const matches = [];
-    corridorNames.forEach(name => activeLayout.passages[name].forEach((value, index) => {
+    corridorNames.forEach(name => draftLayout.passages[name].forEach((value, index) => {
       const level = index + 1;
       if (value === number && !(name === excludeName && level === excludeLevel)) matches.push({ name, level });
     }));
@@ -1682,13 +1701,17 @@
 
   function countPassageNumber(number) {
     let count = 0;
-    corridorNames.forEach(name => activeLayout.passages[name].forEach(value => { if (value === number) count++; }));
+    corridorNames.forEach(name => draftLayout.passages[name].forEach(value => { if (value === number) count++; }));
     return count;
+  }
+
+  function layoutIsDirty() {
+    return JSON.stringify(draftLayout) !== JSON.stringify(activeLayout);
   }
 
   function editPassageNumber(name, level, delta) {
     const index = level - 1;
-    const previousValue = activeLayout.passages[name][index];
+    const previousValue = draftLayout.passages[name][index];
     const newValue = rotateWrapped(previousValue, delta, 1, 25);
     const initialValue = ORIGINAL_LAYOUT.passages[name][index];
     let swapText = '';
@@ -1699,21 +1722,16 @@
       const replacement = findPassageLocations(newValue, name, level)[0];
       if (replacement) {
         const replacementIndex = replacement.level - 1;
-        activeLayout.passages[replacement.name][replacementIndex] = previousValue;
+        draftLayout.passages[replacement.name][replacementIndex] = previousValue;
         const replacementInitial = ORIGINAL_LAYOUT.passages[replacement.name][replacementIndex];
-        const replacementCurrent = activeLayout.passages[replacement.name][replacementIndex];
+        const replacementCurrent = draftLayout.passages[replacement.name][replacementIndex];
         swapText = ` · ${replacement.name}${replacement.level} : ${replacementInitial} → ${replacementCurrent}`;
       }
     }
-    activeLayout.passages[name][index] = newValue;
-    activeLayout = normalizeAndValidateLayout(activeLayout);
-    saveLayout();
-    rebuildLayoutStructures();
-    resetAllStatistics();
-    resetCurrentGame();
-    updateAccounting();
+    draftLayout.passages[name][index] = newValue;
+    draftLayout = normalizeAndValidateLayout(draftLayout);
     renderPassageEditor();
-    showLayoutMessage(`${name}${level} : ${initialValue} → ${activeLayout.passages[name][index]}${swapText}. Sauvegardé localement.`, 'success');
+    showLayoutMessage(`${name}${level} : ${initialValue} → ${draftLayout.passages[name][index]}${swapText} · non sauvegardé.`, 'pending');
   }
 
   function renderPassageEditor() {
@@ -1726,7 +1744,7 @@
       title.textContent = name;
       column.appendChild(title);
       [1, 2].forEach(level => {
-        const value = activeLayout.passages[name][level - 1];
+        const value = draftLayout.passages[name][level - 1];
         const levelLabel = document.createElement('div');
         levelLabel.className = 'passage-level-label';
         levelLabel.textContent = `${name}${level}`;
@@ -1738,26 +1756,26 @@
   }
 
   function cardIsDirty(cardIndex = editingCardIndex) {
-    return JSON.stringify(draftCartons[cardIndex]) !== JSON.stringify(activeLayout.cartons[cardIndex]);
+    return JSON.stringify(draftLayout.cartons[cardIndex]) !== JSON.stringify(activeLayout.cartons[cardIndex]);
   }
 
   function editCardCell(cellIndex, delta) {
-    const flat = draftCartons[editingCardIndex].flat();
+    const flat = draftLayout.cartons[editingCardIndex].flat();
     const previousValue = flat[cellIndex];
     const newValue = rotateWrapped(previousValue, delta, 1, 25);
     const otherIndex = flat.indexOf(newValue);
     flat[cellIndex] = newValue;
     if (otherIndex >= 0 && otherIndex !== cellIndex) flat[otherIndex] = previousValue;
-    draftCartons[editingCardIndex] = Array.from({ length: 5 }, (_, row) => flat.slice(row * 5, row * 5 + 5));
+    draftLayout.cartons[editingCardIndex] = Array.from({ length: 5 }, (_, row) => flat.slice(row * 5, row * 5 + 5));
     renderCardEditor();
 
     const originalFlat = ORIGINAL_LAYOUT.cartons[editingCardIndex].flat();
     const initialValue = originalFlat[cellIndex];
-    const currentValue = draftCartons[editingCardIndex].flat()[cellIndex];
+    const currentValue = draftLayout.cartons[editingCardIndex].flat()[cellIndex];
     let swapText = '';
     if (otherIndex >= 0 && otherIndex !== cellIndex) {
       const otherInitial = originalFlat[otherIndex];
-      const otherCurrent = draftCartons[editingCardIndex].flat()[otherIndex];
+      const otherCurrent = draftLayout.cartons[editingCardIndex].flat()[otherIndex];
       swapText = ` · case ${otherIndex + 1} : ${otherInitial} → ${otherCurrent}`;
     }
     showLayoutMessage(`Carton ${editingCardIndex + 1} · case ${cellIndex + 1} : ${initialValue} → ${currentValue}${swapText} · non sauvegardé.`, 'pending');
@@ -1766,56 +1784,119 @@
   function renderCardEditor() {
     layoutCardTitleEl.textContent = `Carton ${editingCardIndex + 1}`;
     cardEditorEl.innerHTML = '';
-    draftCartons[editingCardIndex].flat().forEach((number, cellIndex) => {
+    draftLayout.cartons[editingCardIndex].flat().forEach((number, cellIndex) => {
       const cell = document.createElement('div');
       cell.className = 'editable-card-cell';
       cell.appendChild(createStepControl(number, delta => editCardCell(cellIndex, delta), `la case ${cellIndex + 1}`));
       cardEditorEl.appendChild(cell);
     });
-    if (cardIsDirty()) showLayoutMessage(`Carton ${editingCardIndex + 1} modifié · non sauvegardé.`, 'pending');
+    if (layoutIsDirty()) showLayoutMessage('Configuration modifiée · non sauvegardée.', 'pending');
   }
 
   function changeEditingCard(delta) {
     editingCardIndex = rotateWrapped(editingCardIndex + 1, delta, 1, 4) - 1;
     renderCardEditor();
-    if (!cardIsDirty()) showLayoutMessage(`Carton ${editingCardIndex + 1}.`, '');
+    if (!layoutIsDirty()) showLayoutMessage(`Carton ${editingCardIndex + 1}.`, '');
   }
 
-  function saveEditedCard() {
-    const index = editingCardIndex;
-    activeLayout.cartons[index] = cloneLayout({ cartons: [draftCartons[index]] }).cartons[0];
-    activeLayout = normalizeAndValidateLayout(activeLayout);
+  function applyAndPersistDraftLayout(message) {
+    const normalized = normalizeAndValidateLayout(draftLayout);
+    activeLayout = cloneLayout(normalized);
+    draftLayout = cloneLayout(normalized);
     saveLayout();
     rebuildLayoutStructures();
     resetAllStatistics();
     resetCurrentGame();
     updateAccounting();
-    renderCardEditor();
-    showLayoutMessage(`Carton ${index + 1} sauvegardé localement et appliqué. Comptabilité remise à zéro.`, 'success');
+    renderLayoutEditors();
+    showLayoutMessage(message, 'success');
   }
 
-  function restoreEditedCard() {
-    const index = editingCardIndex;
-    draftCartons[index] = cloneLayout({ cartons: [ORIGINAL_LAYOUT.cartons[index]] }).cartons[0];
-    activeLayout.cartons[index] = cloneLayout({ cartons: [ORIGINAL_LAYOUT.cartons[index]] }).cartons[0];
-    activeLayout = normalizeAndValidateLayout(activeLayout);
-    saveLayout();
-    rebuildLayoutStructures();
-    resetAllStatistics();
-    resetCurrentGame();
-    updateAccounting();
-    renderCardEditor();
-    showLayoutMessage(`Carton ${index + 1} restauré depuis cartons.js et sauvegardé localement. Comptabilité remise à zéro.`, 'success');
+  function saveEditedLayout() {
+    try {
+      applyAndPersistDraftLayout('28 passages + 4 cartons sauvegardés localement et appliqués. Comptabilité remise à zéro.');
+    } catch (error) {
+      showLayoutMessage(error.message || 'Configuration invalide.', 'error');
+    }
+  }
+
+  function restoreEditedLayout() {
+    if (!window.confirm('Restaurer les 28 passages et les 4 cartons à leur configuration d’origine ?')) return;
+    try {
+      draftLayout = cloneLayout(ORIGINAL_LAYOUT);
+      activeLayout = cloneLayout(ORIGINAL_LAYOUT);
+      try { localStorage.removeItem(LAYOUT_STORAGE_KEY); } catch (_) {}
+      rebuildLayoutStructures();
+      resetAllStatistics();
+      resetCurrentGame();
+      updateAccounting();
+      renderLayoutEditors();
+      showLayoutMessage('28 passages + 4 cartons restaurés depuis cartons.js. Comptabilité remise à zéro.', 'success');
+    } catch (error) {
+      showLayoutMessage(error.message || 'Restauration impossible.', 'error');
+    }
+  }
+
+  async function exportLayoutFile() {
+    try {
+      const normalized = normalizeAndValidateLayout(draftLayout);
+      const payload = {
+        type: 'bingo-layout',
+        version: 1,
+        passages: normalized.passages,
+        cartons: normalized.cartons
+      };
+      const text = JSON.stringify(payload, null, 2) + '\n';
+      const filename = 'bingo_cartons_numeros.json';
+
+      if ('showSaveFilePicker' in window) {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: 'Cartons et numéros Bingo JSON', accept: { 'application/json': ['.json'] } }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(text);
+        await writable.close();
+      } else {
+        const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+      showLayoutMessage('28 passages + 4 cartons exportés.', 'success');
+    } catch (error) {
+      if (error && error.name === 'AbortError') return;
+      showLayoutMessage(error.message || 'Export impossible.', 'error');
+    }
+  }
+
+  async function importLayoutFile(file) {
+    if (!file) return;
+    try {
+      const raw = JSON.parse(await file.text());
+      const normalized = normalizeAndValidateLayout(raw);
+      draftLayout = cloneLayout(normalized);
+      activeLayout = cloneLayout(normalized);
+      saveLayout();
+      rebuildLayoutStructures();
+      resetAllStatistics();
+      resetCurrentGame();
+      updateAccounting();
+      renderLayoutEditors();
+      showLayoutMessage('28 passages + 4 cartons importés, appliqués et sauvegardés localement. Comptabilité remise à zéro.', 'success');
+    } catch (error) {
+      showLayoutMessage(error.message || 'Fichier cartons / numéros invalide.', 'error');
+    } finally {
+      layoutImportInput.value = '';
+    }
   }
 
   function renderLayoutEditors() {
-    // Recharge les brouillons non modifiés depuis la configuration active, sans écraser
-    // un carton que l'utilisateur est en train de préparer avant sauvegarde.
-    activeLayout.cartons.forEach((card, index) => {
-      if (!draftCartons[index] || JSON.stringify(draftCartons[index]) === JSON.stringify(activeLayout.cartons[index])) {
-        draftCartons[index] = cloneLayout({ cartons: [card] }).cartons[0];
-      }
-    });
     renderPassageEditor();
     renderCardEditor();
   }
@@ -2304,8 +2385,11 @@
   tabLayoutBtn.addEventListener('click', () => switchModalPanel('layout'));
   layoutPrevCardBtn.addEventListener('click', () => changeEditingCard(-1));
   layoutNextCardBtn.addEventListener('click', () => changeEditingCard(+1));
-  layoutSaveCardBtn.addEventListener('click', saveEditedCard);
-  layoutRestoreCardBtn.addEventListener('click', restoreEditedCard);
+  layoutSaveCardBtn.addEventListener('click', saveEditedLayout);
+  layoutRestoreCardBtn.addEventListener('click', restoreEditedLayout);
+  layoutImportBtn.addEventListener('click', () => layoutImportInput.click());
+  layoutExportBtn.addEventListener('click', exportLayoutFile);
+  layoutImportInput.addEventListener('change', () => importLayoutFile(layoutImportInput.files?.[0]));
   probModeDirectBtn.addEventListener('click', () => setProbabilityMode('direct'));
   probModeAssistedBtn.addEventListener('click', () => setProbabilityMode('assisted'));
   normalizeProbabilitiesBtn.addEventListener('click', () => {
