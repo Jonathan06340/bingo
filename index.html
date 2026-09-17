@@ -683,16 +683,16 @@
 
   .passage-editor-grid {
     display: grid;
-    grid-template-columns: repeat(14, minmax(52px, 1fr));
+    grid-template-columns: repeat(14, minmax(58px, 1fr));
     gap: 5px;
-    min-width: 820px;
+    min-width: 860px;
   }
 
   .passage-editor-wrap { overflow-x: auto; padding-bottom: 3px; }
 
   .passage-editor-column {
     display: grid;
-    gap: 5px;
+    gap: 3px;
     text-align: center;
   }
 
@@ -702,15 +702,17 @@
   }
 
   .passage-level-label {
-    margin-top: 1px;
+    margin-top: 0;
     font-size: 9px;
+    line-height: 1;
     font-weight: 850;
     color: var(--muted);
   }
 
   .step-control {
     display: grid;
-    grid-template-rows: 24px 34px 24px;
+    grid-template-columns: 22px minmax(28px, 1fr) 22px;
+    height: 34px;
     border: 1px solid #c8cdd3;
     border-radius: 7px;
     overflow: hidden;
@@ -732,9 +734,9 @@
     align-items: center;
     justify-content: center;
     font-weight: 950;
-    font-size: 17px;
-    border-top: 1px solid #d6d9dd;
-    border-bottom: 1px solid #d6d9dd;
+    font-size: 16px;
+    border-left: 1px solid #d6d9dd;
+    border-right: 1px solid #d6d9dd;
   }
 
   .step-control .step-caption {
@@ -747,16 +749,16 @@
 
   .card-editor-toolbar {
     display: grid;
-    grid-template-columns: auto minmax(150px, 1fr) auto;
+    grid-template-columns: 38px minmax(110px, 150px) 38px auto auto;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    max-width: 430px;
-    margin: 0 auto 10px;
+    margin: 0 auto 8px;
   }
 
   .card-editor-toolbar button {
-    min-height: 36px;
-    padding: 0 12px;
+    min-height: 34px;
+    padding: 0 10px;
   }
 
   .card-editor-title {
@@ -766,7 +768,7 @@
   }
 
   .editable-card-grid {
-    width: min(430px, 100%);
+    width: min(520px, 100%);
     margin: 0 auto;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -779,23 +781,16 @@
     border-bottom: 1px solid #858c94;
     background: #fff;
     min-width: 0;
+    padding: 5px;
   }
 
   .editable-card-cell .step-control {
-    border: 0;
-    border-radius: 0;
-    grid-template-rows: 25px 38px 25px;
+    border-radius: 5px;
+    height: 38px;
+    grid-template-columns: 26px minmax(30px, 1fr) 26px;
   }
 
-  .editable-card-cell .step-value { font-size: 19px; }
-
-  .layout-actions {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 10px;
-  }
+  .editable-card-cell .step-value { font-size: 18px; }
 
   #layoutSaveCardBtn { background: #218838; }
   #layoutRestoreCardBtn { background: #c73a3a; }
@@ -817,6 +812,13 @@
     font-size: 11px;
     line-height: 1.35;
     color: var(--muted);
+  }
+
+  @media (max-width: 720px) {
+    .card-editor-toolbar {
+      grid-template-columns: 38px minmax(100px, 1fr) 38px;
+    }
+    #layoutSaveCardBtn, #layoutRestoreCardBtn { grid-column: span 1; }
   }
 
   @media (max-width: 900px) {
@@ -880,7 +882,7 @@
   <section class="cards" id="cards"></section>
   <div class="history" id="history"><strong>Historique :</strong> —</div>
 </div>
-<div class="signature">Version 20 · By JT for PMGAMES</div>
+<div class="signature">Version 21 · By JT for PMGAMES</div>
 
 <div class="modal-backdrop" id="accountingBackdrop" role="dialog" aria-modal="true" aria-labelledby="accountingTitle">
   <div class="accounting-modal">
@@ -980,7 +982,7 @@
           <div class="passage-editor-wrap">
             <div class="passage-editor-grid" id="passageEditor"></div>
           </div>
-          <div class="layout-note">▲ / ▼ modifie chaque numéro avec rotation aux limites : 25 → 1 et 1 → 25. Les modifications des couloirs sont appliquées et sauvegardées localement immédiatement.</div>
+          <div class="layout-note">◀ / ▶ modifie chaque numéro avec rotation aux limites : 25 → 1 et 1 → 25. Les modifications des couloirs sont appliquées et sauvegardées localement immédiatement.</div>
         </div>
 
         <div class="layout-section">
@@ -989,21 +991,19 @@
             <button id="layoutPrevCardBtn" type="button" title="Carton précédent">◀</button>
             <div class="card-editor-title" id="layoutCardTitle">Carton 1</div>
             <button id="layoutNextCardBtn" type="button" title="Carton suivant">▶</button>
+            <button id="layoutSaveCardBtn" type="button">SAUVEGARDER</button>
+            <button id="layoutRestoreCardBtn" type="button">RESTAURER</button>
           </div>
           <div class="editable-card-grid" id="cardEditor"></div>
-          <div class="layout-actions">
-            <button id="layoutSaveCardBtn" type="button">SAUVEGARDER LE CARTON</button>
-            <button id="layoutRestoreCardBtn" type="button">RESTAURER LE CARTON</button>
-          </div>
           <div class="layout-message" id="layoutMessage"></div>
-          <div class="layout-note">▲ / ▼ fait tourner les valeurs 1…25. Pour garder un carton valide, le numéro demandé est échangé automatiquement avec celui déjà présent. Les flèches ◀ / ▶ des cartons tournent aussi aux limites : 1 ↔ 4.</div>
+          <div class="layout-note">◀ / ▶ fait tourner les valeurs 1…25. Pour garder un carton valide, le numéro demandé est échangé automatiquement avec celui déjà présent. La sélection des cartons tourne aussi aux limites : 1 ↔ 4.</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<script src="cartons.js?v=20"></script>
+<script src="cartons.js?v=21"></script>
 <script>
 (() => {
   const STORAGE_KEY = 'jtPmgamesBingoSettingsV2';
@@ -1654,20 +1654,20 @@
   function createStepControl(value, onStep, label) {
     const control = document.createElement('div');
     control.className = 'step-control';
-    const up = document.createElement('button');
-    up.type = 'button';
-    up.textContent = '▲';
-    up.title = `Incrémenter ${label}`;
+    const down = document.createElement('button');
+    down.type = 'button';
+    down.textContent = '◀';
+    down.title = `Décrémenter ${label}`;
     const display = document.createElement('div');
     display.className = 'step-value';
     display.textContent = value;
-    const down = document.createElement('button');
-    down.type = 'button';
-    down.textContent = '▼';
-    down.title = `Décrémenter ${label}`;
-    up.addEventListener('click', () => onStep(+1));
+    const up = document.createElement('button');
+    up.type = 'button';
+    up.textContent = '▶';
+    up.title = `Incrémenter ${label}`;
     down.addEventListener('click', () => onStep(-1));
-    control.append(up, display, down);
+    up.addEventListener('click', () => onStep(+1));
+    control.append(down, display, up);
     return control;
   }
 
